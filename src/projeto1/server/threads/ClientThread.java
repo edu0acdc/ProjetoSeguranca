@@ -50,24 +50,13 @@ public class ClientThread extends Thread {
 				MessagePacket send = rh.handlePacket(packet,ois,oos);
 				oos.writeObject(send);
 			}
-			
-
-
-
-
-
-
-
 
 		} catch (IOException e) {
-			String user = client.getNomeUser() == null ? "":client.getNomeUser();
+			String user = client == null ? "": (client.getNomeUser() == null ? "" : client.getNomeUser());
 			System.out.println("ERROR ("+user+") : CONNECTION LOST ");
 		}
 
 		manager.deleteFromManager(this);
-
-
-
 	}
 
 	private boolean tryLogin(ObjectInputStream ois, ObjectOutputStream oos) {
@@ -81,22 +70,37 @@ public class ClientThread extends Thread {
 		String[] args = login_packet.getArgs();
 		String username = args[0];
 		String password = args[1];
+		
+		
 
 		try {
-			client = rh.authenticate(username,password);
-			if(client == null) {
-				System.out.println("ERROR: "+username+" LOGIN FAILED");
-				oos.writeObject(new MessagePacket(Message.LOGIN_FAIL, new String[] {},username,new String[] {}));
-				return false;
+			if(!rh.existsUser(username)) {
+				oos.writeObject(new MessagePacket(Message.NEED_USER_NAME, new String[] {}, "server", new String[] {}));
+				
+				MessagePacket nome = (MessagePacket) ois.readObject();
+				
+				if(!rh.register(username,password,nome.getArgs()[0])) {
+					oos.writeObject(new MessagePacket(Message.LOGIN_FAIL, new String[] {},"server",new String[] {}));
+				}
+				
+				oos.writeObject(new MessagePacket(Message.LOGIN_SUCCESS, new String[] {},"server",new String[] {}));
+				
 			}
-			System.out.println("INFO: "+username+" login success");
-			oos.writeObject(new MessagePacket(Message.LOGIN_SUCCESS, new String[] {},username,new String[] {}));
-		}catch (IOException e) {
+			else {
+				client = rh.authenticate(username,password);
+				if(client == null) {
+					System.out.println("ERROR: "+username+" LOGIN FAILED");
+					oos.writeObject(new MessagePacket(Message.LOGIN_FAIL, new String[] {},"server",new String[] {}));
+					return false;
+				}
+				System.out.println("INFO: "+username+" login success");
+				oos.writeObject(new MessagePacket(Message.LOGIN_SUCCESS, new String[] {},"server",new String[] {}));
+			}
+			
+		}catch (IOException | ClassNotFoundException e) {
 			System.out.println("ERROR: NOT POSSIBLE TO ANSWER "+username);
 			return false;
 		}
 		return true;
 	}
-
-
 }

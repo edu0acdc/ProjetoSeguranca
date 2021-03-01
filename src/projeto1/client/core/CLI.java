@@ -29,36 +29,51 @@ public class CLI {
 
 		String cmd = sc.nextLine();
 		
-		if(cmd.length() == 0) return null;
+		String[] aux = cmd.split(" ");
 		
-		char cmd_c = cmd.charAt(0);
+		if(aux.length == 0) {
+			return null;
+		}
 
-		switch (cmd_c) {
-		case 'f':
+		switch (aux[0]) {
+		case "f":
+		case "follow":
 			return follow(cmd);
-		case 'u':
+		case "u":
+		case "unfollow":
 			return unFollow(cmd);
-		case 'v':
+		case "v":
+		case "viewfollowers":
 			return viewFollowers(cmd);
-		case 'p':
+		case "p":
+		case "post":
 			return post(cmd);
-		case 'w':
+		case "wall":
+		case "w":
 			return wall(cmd);
-		case 'l':
+		case "l":
+		case "like":
 			return like(cmd);
-		case 'n':
+		case "n":
+		case "newgroup":
 			return newGroup(cmd);
-		case 'a':
+		case "a":
+		case "adduser":
 			return addUser(cmd);
-		case 'r':
+		case "r":
+		case "removeuser":
 			return removeUser(cmd);
-		case 'g':
+		case "g":
+		case "groupinfo":
 			return groupInfo(cmd);
-		case 'm':
+		case "m":
+		case "message":
 			return message(cmd);
-		case 'c':
+		case "c":
+		case "collect":
 			return collect(cmd);
-		case 'h':
+		case "h":
+		case "history":
 			return history(cmd);
 		default:
 			System.out.println("ERROR: COMMAND NOT FOUND");
@@ -91,7 +106,12 @@ public class CLI {
 		if(aux.length != 3) {
 			return null;
 		}
-		return new MessagePacket(Message.MSG, new String[]{aux[1],aux[2]},username,new String[] {});
+		
+		StringBuilder bob = new StringBuilder();
+		for (int i = 2; i < aux.length; i++) {
+			bob.append(aux[i]);
+		}
+		return new MessagePacket(Message.MSG, new String[]{aux[1],bob.toString()},username,new String[] {});
 	}
 
 
@@ -198,6 +218,12 @@ public class CLI {
 		System.out.println("||||||||||||||||||||");
 		System.out.println("||  SeiTchiz CLI  ||");
 		System.out.println("||||||||||||||||||||");
+	}
+
+
+	public String askNomeUser() {
+		System.out.print("First login detected.\nYour name>");
+		return sc.nextLine();
 	}
 
 

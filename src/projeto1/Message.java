@@ -10,6 +10,8 @@ public class Message {
 	public static final int LOGIN_SUCCESS = 401;
 	public static final int LOGIN_FAIL = 402;
 	public static final int LOGIN_WRONG_PASSWORD = 403;
+	public static final int NEED_USER_NAME = 404;
+	public static final int USER_NAME = 405;
 	
 	// 500-599 WARNINGS
 	public static final int SEND = 500;

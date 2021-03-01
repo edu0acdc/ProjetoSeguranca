@@ -31,5 +31,13 @@ public class RequestHandler {
 	public MessagePacket handlePacket(MessagePacket packet,ObjectInputStream ois,ObjectOutputStream oos) {
 		return pps.processPacket(packet,ois,oos);
 	}
+
+	public boolean existsUser(String username) {
+		return !database.checkAvailableUsername(username);
+	}
+
+	public boolean register(String username,String password,String nome_de_user) {
+		return database.createClient(username,password,nome_de_user);
+	}
 	
 }

@@ -1,4 +1,2 @@
-user1:user1:123
-user2:user2:123
-user3:user3:123
-eduacdc:eduacdc:123
+sussurro:xXRodrigoMartinsXx:123
+eduacdc:Edu:123

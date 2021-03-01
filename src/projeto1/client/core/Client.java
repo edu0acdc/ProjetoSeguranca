@@ -21,13 +21,14 @@ public class Client extends Thread{
 	private int port;
 	private Socket s;
 	private PacketProcessor pp;
-
+	private CLI cli ;
 
 	public Client(String ip,int port, String client_id, String password) {
 		this.password = password;
 		this.id = client_id;
 		this.ip = ip;
 		this.port = port;
+		this.cli = new CLI(id);
 		this.pp = new PacketProcessor();
 		try {
 			System.out.println("INFO: Trying to connect to "+ip+" at port "+port);
@@ -48,6 +49,7 @@ public class Client extends Thread{
 		this.id = client_id;
 		this.ip = ip;
 		this.port = port;
+		this.cli = new CLI(id);
 		this.pp = new PacketProcessor();
 		try {
 			System.out.println("INFO: Trying to connect to "+ip+" at port "+port);
@@ -81,7 +83,7 @@ public class Client extends Thread{
 		System.out.println("INFO: Socket created with "+ip+":"+port);
 
 		System.out.println("INFO: Running Client");
-		CLI cli = new CLI(id);
+		
 		if(password == null) {
 			password = cli.askPassword();
 		}
@@ -248,8 +250,35 @@ public class Client extends Thread{
 		}
 
 		if(login_response.getMsg() == Message.LOGIN_SUCCESS) {
-			System.out.println("INFO: LOGIN SUCCESSFULL");
+			System.out.println("INFO: LOGIN SUCCESSFULL"); 	 	
 			return true;
+		}
+		else if(login_response.getMsg() == Message.NEED_USER_NAME) {
+			String nome_de_user = cli.askNomeUser();
+			while(nome_de_user.trim().length() == 0) {
+				nome_de_user = cli.askNomeUser();
+			}
+			try {
+				oos.writeObject(new MessagePacket(Message.USER_NAME,new String[] {nome_de_user},id,new String[] {})); //send
+				
+				MessagePacket response = (MessagePacket) ois.readObject();
+				if(response.getMsg() == Message.LOGIN_SUCCESS) {
+					System.out.println("INFO: LOGIN SUCCESSFULL"); 	 	
+					return true;
+				}
+				else if(response.getMsg() == Message.LOGIN_FAIL) {
+					System.out.println("ERROR: LOGIN FAILED");
+					return false;
+				}
+				else {
+					System.out.println("ERROR: FATAL ERROR");
+					return false;
+				}
+			} catch (IOException | ClassNotFoundException e) {
+				System.out.println("ERROR: CONNECTION LOST");
+				e.printStackTrace();
+				return false;
+			}
 		}
 		else if(login_response.getMsg() == Message.LOGIN_FAIL) {
 			System.out.println("ERROR: LOGIN FAILED");

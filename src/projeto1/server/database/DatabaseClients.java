@@ -102,7 +102,7 @@ public class DatabaseClients {
 		
 	}
 	
-	private boolean createClient(String username,String password) {
+	public boolean createClient(String username,String password, String nome_de_user) {
 		if(clients.containsKey(username)) {
 			System.out.println("Username already in use");
 			return false;
@@ -115,7 +115,7 @@ public class DatabaseClients {
 		}
 		
 		
-		clients.put(username,new ClientInfo(username,password,username));
+		clients.put(username,new ClientInfo(username,password,nome_de_user));
 		return save();
 	}
 
@@ -141,10 +141,6 @@ public class DatabaseClients {
 	}
 	
 	public synchronized ClientInfo login(String username,String password) {
-		if(!clients.containsKey(username)) {
-			createClient(username, password);
-		}
-		
 		if(authenticate(username, password)) {
 			return clients.get(username);
 		}
