@@ -97,6 +97,7 @@ public class Client extends Thread{
 			while(true) {
 				MessagePacket to_send = cli.menu();
 				if(to_send == null) {
+					System.out.println("ERROR: NOT POSSIBLE TO EXECUTE COMMAND");
 					continue;
 				}	
 				oos.writeObject(to_send);

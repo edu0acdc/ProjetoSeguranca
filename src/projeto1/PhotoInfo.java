@@ -38,6 +38,6 @@ public class PhotoInfo implements Serializable {
 	
 	@Override
 	public String toString() {
-		return "ID: "+id+"Photo of: "+owner+" | "+filename+" | Likes: "+likes;
+		return "ID: "+id+" | Photo of: "+owner+" | "+filename+" | Likes: "+likes;
 	}
 }

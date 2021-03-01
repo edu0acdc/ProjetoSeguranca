@@ -121,6 +121,10 @@ public class PacketProcessor {
 	private void processWall(MessagePacket packet) {
 		if(packet.getMsg() == Message.SUCCESS) {
 			PhotoInfo[] results = (PhotoInfo[]) packet.getResults()[0];
+			if(results.length == 0) {
+				System.out.println("No photos to see");
+				return;
+			}
 			for (int i = 0; i < results.length; i++) {
 				System.out.println(results[i]);
 			}
@@ -137,10 +141,12 @@ public class PacketProcessor {
 
 	private void processLike(MessagePacket packet) {
 		if(packet.getMsg() == Message.SUCCESS) {
-
+			System.out.print("SUCCESS: ");
+			System.out.println(packet.getINFO());
 		}
 		else if(packet.getMsg() == Message.FAIL) {
-
+			System.out.print("FAILED: ");
+			System.out.println(packet.getINFO());
 		}
 		else {
 			System.out.println("ERROR: SOMETHING WENT WRONG");

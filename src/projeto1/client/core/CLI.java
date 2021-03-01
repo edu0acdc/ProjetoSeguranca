@@ -159,6 +159,12 @@ public class CLI {
 		if(aux.length != 2) {
 			return null;
 		}
+		
+		try {
+			Long.parseLong(aux[1]);
+		}catch (NumberFormatException e) {
+			return null;
+		}
 		return new MessagePacket(Message.LIKE, new String[]{aux[1]},username,new String[] {});
 	}
 

@@ -1,2 +1,3 @@
-sussurro:xXRodrigoMartinsXx:123
-eduacdc:Edu:123
+sussurro:xXRodrigoMartinsXx:coco123
+regras:xXRegrasXx:coco321
+eduacdc:EduAcdc:123

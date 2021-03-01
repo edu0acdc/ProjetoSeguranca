@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import projeto1.Message;
 import projeto1.MessagePacket;
 import projeto1.PartialFile;
@@ -137,7 +138,6 @@ public class PhotoHandler {
 			ps.setINFO("Error while sending photos");
 			return ps;
 		}
-
 
 		PhotoInfo[] pis = new PhotoInfo[ids.size()];
 		for (int i = 0; i < pis.length; i++) {
