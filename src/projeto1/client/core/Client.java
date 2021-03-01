@@ -205,10 +205,7 @@ public class Client extends Thread{
 	private boolean post(ObjectOutputStream oos, ObjectInputStream ois,MessagePacket to_send) {
 		String filename = to_send.getArgs()[0];
 		File f = new File("client/photos/"+filename);
-		if(!f.exists()) {
-			System.out.println("ERROR: File not found on folder client/photos");
-			return false;
-		}
+		
 		try {
 			FileInputStream fis = new FileInputStream(f);
 			oos.writeObject(new PartialFile(new byte[] {},0,Message.NEW_FILE,filename));

@@ -1,5 +1,6 @@
 package projeto1.client.core;
 
+import java.io.File;
 import java.util.Scanner;
 
 import projeto1.Message;
@@ -187,6 +188,13 @@ public class CLI {
 	private MessagePacket post(String cmd) {
 		String[] aux = cmd.split(" ");
 		if(aux.length != 2) {
+			return null;
+		}
+		
+		File f = new File("client/photos/"+aux[1]);
+		if(!f.exists()) {
+			System.out.println("ERROR: File not found on folder client/photos. "
+					+ "\nPlease copy your photo to client/photos folder and use name with extension (ex: photo.jpg)");
 			return null;
 		}
 		return new MessagePacket(Message.POST, new String[]{aux[1]},username,new String[] {});

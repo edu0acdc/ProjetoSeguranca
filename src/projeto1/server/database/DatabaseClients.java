@@ -49,6 +49,7 @@ public class DatabaseClients {
 	
 	private void addFromTxt(String username,String nome_de_user,String password) {
 		File dir = new File("server/"+username);
+		ClientInfo c = null;
 		if(!dir.exists() || !dir.isDirectory()) {
 			System.out.println("ERROR ("+username+"): PERSONAL FOLDER MISSING ");
 			if(dir.mkdir()) {
@@ -60,7 +61,8 @@ public class DatabaseClients {
 		try {
 			FileInputStream fis = new FileInputStream("server/"+username+"/"+username+".info");
 			ObjectInputStream ois = new ObjectInputStream(fis);
-			ClientInfo c = (ClientInfo) ois.readObject();
+			c = (ClientInfo) ois.readObject();
+			
 			ois.close();
 			if(!c.getNomeUser().contentEquals(nome_de_user) || !c.getPassword().contentEquals(password)
 					|| !c.getUsername().contentEquals(username)) {
@@ -68,7 +70,9 @@ public class DatabaseClients {
 			}
 		}catch (IOException | ClassNotFoundException e) {
 			clients.put(username,new ClientInfo(username, password,nome_de_user));
+			return;
 		}
+		clients.put(c.getUsername(),c);
 		
 	}
 
