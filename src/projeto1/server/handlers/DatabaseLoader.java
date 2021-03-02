@@ -9,7 +9,7 @@ import projeto1.server.database.DatabasePhotos;
 public class DatabaseLoader {
 
 	public static void loadDatabase() {
-		File dir = new File("server");
+		File dir = new File("./server");
 		if(!dir.isDirectory() || !dir.exists())
 			dir.mkdir();
 		

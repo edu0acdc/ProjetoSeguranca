@@ -132,7 +132,7 @@ public class Client extends Thread{
 
 	private void load() {
 		System.out.println("INFO: Checking integrity of system");
-		File folder_c = new File("client");
+		File folder_c = new File("./client");
 		if(!folder_c.exists() || !folder_c.isDirectory()) {
 			System.out.println("ERROR: Client folder not found, creating new one");
 			if(!folder_c.mkdir()) {
