@@ -1,8 +1,8 @@
 package projeto1.server.core;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.List;
 
 import projeto1.MessageGroup;
 
@@ -14,13 +14,17 @@ public class Group implements Serializable {
 	private static final long serialVersionUID = -5336545197136146981L;
 	private String owner;
 	private String groupID;
-	private HashMap<String, MessageBox> msg_box;
+	private List<MessageGroup> open_msgs;
+	private List<MessageGroup> history;
+	private List<String> members;
+	
 	
 	public Group(String groupID,String owner) {
 		this.owner = owner;
 		this.groupID = groupID;
-		msg_box = new HashMap<String, MessageBox>();
-		msg_box.put(owner,new MessageBox(groupID,owner));
+		open_msgs = new ArrayList<MessageGroup>();
+		history = new ArrayList<MessageGroup>();
+		members = new ArrayList<String>();
 	}
 	
 	public String getGroupID() {
@@ -28,8 +32,8 @@ public class Group implements Serializable {
 	}
 	
 	public String[] getMembers() {
-		String[] aux = new String[msg_box.keySet().size()];
-		return msg_box.keySet().toArray(aux);
+		String[] aux = new String[members.size()];
+		return members.toArray(aux);
 	}
 	
 	public String getOwner() {
@@ -37,49 +41,81 @@ public class Group implements Serializable {
 	}
 	
 	public boolean addMember(String username) {
-		if(msg_box.containsKey(username))
+		if(members.contains(username))
 			return false;
-		msg_box.put(username,new MessageBox(groupID, username));
+		members.add(username);
 		return true;
 	}
 	
 	public boolean removeMember(String username) {
-		if(!msg_box.containsKey(username))
+		if(!members.contains(username))
 			return false;
-		msg_box.remove(username);
+		members.remove(username);
+		checkHistory();
 		return true;
 	}
 
 	public boolean isMember(String username) {
-		return msg_box.containsKey(username);
+		return members.contains(username) || owner.contentEquals(username);
 	}
 	
 	@Override
 	public String toString() {
 		StringBuilder bob = new StringBuilder("Owner:"+owner+"\nMembers:");
-		for (String string : msg_box.keySet()) {
+		for (String string : members) {
 			bob.append(string+";");
 		}
 		return bob.toString();
 	}
 	
-	public void addMessage(MessageGroup m) {
-		for (Entry<String, MessageBox> entry : msg_box.entrySet()) {
-			if(!entry.getKey().contentEquals(m.getSender())) {
-				entry.getValue().addMessage(m);
-			}
-			else {
-				entry.getValue().addOwnMessage(m);
-			}
-		}
+	public void addMessage(String sender,String msg) {
+		String[] readers = new String[members.size()+1];
+		members.toArray(readers);
+		readers[readers.length-1] = owner;
+		open_msgs.add(new MessageGroup(sender, msg, readers));
+		checkHistory();
 	}
 	
 	public MessageGroup[] getHistory(String username) {
-		return msg_box.get(username).getHistory();
+		List<MessageGroup> aux1 = new ArrayList<>();
+		for (MessageGroup msg : history) {
+			if(msg.canBeSeenBy(username)) {
+				aux1.add(msg);
+			}
+		}
+		MessageGroup[] aux = new MessageGroup[aux1.size()];
+		return aux1.toArray(aux);
 	}
 
 	public MessageGroup[] collect(String username) {
-		return msg_box.get(username).collect();	
+		List<MessageGroup> aux1 = new ArrayList<>();
+		for (MessageGroup msg : open_msgs) {
+			if(!msg.alreadySeen(username) && msg.canBeSeenBy(username)) {
+				aux1.add(msg);
+				msg.newView(username);
+			}
+		}
+		checkHistory();
+		MessageGroup[] aux = new MessageGroup[aux1.size()];
+		return aux1.toArray(aux);
+	}
+
+	private void checkHistory() {
+		boolean to_move;
+		List<MessageGroup> moving = new ArrayList<>();
+		
+		for (MessageGroup msg : open_msgs) {
+			to_move = msg.alreadySeen(owner);
+			for (String user : members) {
+				to_move = to_move && msg.alreadySeen(user);
+			}
+			if(to_move) {
+				moving.add(msg);
+			}				
+		}
+		
+		open_msgs.removeAll(moving);
+		history.addAll(moving);
 	}  
 	
 	

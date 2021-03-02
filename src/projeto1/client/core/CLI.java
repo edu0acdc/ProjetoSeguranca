@@ -68,7 +68,7 @@ public class CLI {
 		case "groupinfo":
 			return groupInfo(cmd);
 		case "m":
-		case "message":
+		case "msg":
 			return message(cmd);
 		case "c":
 		case "collect":

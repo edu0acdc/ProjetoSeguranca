@@ -117,7 +117,7 @@ public class DatabaseGroups {
 	}
 
 	public void sendMessage(String sender, String msg,String groupID) {
-		groups.get(groupID).addMessage(new MessageGroup(sender, msg));
+		groups.get(groupID).addMessage(sender, msg);
 		save();
 	}
 
