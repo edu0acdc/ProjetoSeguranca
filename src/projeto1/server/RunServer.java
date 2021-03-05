@@ -11,7 +11,15 @@ public class RunServer extends Thread{
 	public static void main(String[] args) {
 		DatabaseLoader.loadDatabase();
 		try {	
-			Server s = new Server(12345);
+			if(args.length != 2) {
+				System.out.println("Usage -> SeiTchizServer [port]");
+				return;
+			}
+			if(!args[0].contentEquals("SeiTchizServer")) {
+				System.out.println("Usage -> SeiTchizServer [port]");
+				return;
+			}
+			Server s = new Server(Integer.valueOf(args[1]));
 			s.start();
 		} catch (IOException e) {
 			System.out.println("ERROR: FATAL ERROR WHILE STARTING SERVER");

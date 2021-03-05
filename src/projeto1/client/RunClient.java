@@ -9,6 +9,12 @@ public class RunClient{
 	public static void main(String[] args) {
 		if(args.length < 3 || args.length > 4) {
 			System.out.println("Error: Usage -> SeiTchiz <serverAddress> <clientID> [password]");
+			return;
+		}
+		
+		if(!args[0].contentEquals("SeiTchiz")) {
+			System.out.println("Error: Usage -> SeiTchiz <serverAddress> <clientID> [password]");
+			return;
 		}
 		
 		
