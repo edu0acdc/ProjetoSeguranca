@@ -159,8 +159,8 @@ public class DatabaseClients {
 	}
 
 	public boolean addFollower(String sender, String userID) {
-		if(clients.get(userID).addFollower(sender)) {
-			clients.get(sender).addFollowing(userID);
+		if(clients.get(sender).addFollower(sender)) {
+			clients.get(userID).addFollowing(userID);
 			save();
 			return true;
 		}
