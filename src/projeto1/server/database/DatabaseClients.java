@@ -134,6 +134,7 @@ public class DatabaseClients {
 				writer.append(username+":"+nome+":"+password+"\n");
 				FileOutputStream fos = new FileOutputStream(new File("server/"+username+"/"+username+".info"));
 				ObjectOutputStream oos = new ObjectOutputStream(fos);
+				System.out.println(entry.getKey()+"|"+ entry.getValue().getFollowers().length + "|" + entry.getValue().getFollowing().length);
 				oos.writeObject(entry.getValue());
 				oos.close();
 			}
@@ -159,8 +160,8 @@ public class DatabaseClients {
 	}
 
 	public boolean addFollower(String sender, String userID) {
-		if(clients.get(sender).addFollower(sender)) {
-			clients.get(userID).addFollowing(userID);
+		if(clients.get(sender).nowFollowing(userID)) {
+			clients.get(userID).newFollower(sender);
 			save();
 			return true;
 		}
@@ -168,8 +169,8 @@ public class DatabaseClients {
 	}
 
 	public boolean removeFollower(String sender, String userID) {
-		if(clients.get(sender).removeFollower(userID)) {
-			clients.get(userID).removeFollowing(sender);
+		if(clients.get(sender).removeFollowing(userID)) {
+			clients.get(userID).removeFollower(sender);
 			save();
 			return true;
 		}

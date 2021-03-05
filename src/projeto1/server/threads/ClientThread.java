@@ -80,10 +80,17 @@ public class ClientThread extends Thread {
 				MessagePacket nome = (MessagePacket) ois.readObject();
 
 				if(!rh.register(username,password,nome.getArgs()[0])) {
+					System.out.println("ERROR: "+username+" REGISTER FAILED");
 					oos.writeObject(new MessagePacket(Message.LOGIN_FAIL, new String[] {},"server",new String[] {}));
+					return false;
 				}
-
-				oos.writeObject(new MessagePacket(Message.LOGIN_SUCCESS, new String[] {},"server",new String[] {}));
+				else {
+					client = rh.authenticate(username,password);
+					System.out.println("INFO: "+username+" register and login success");
+					oos.writeObject(new MessagePacket(Message.LOGIN_SUCCESS, new String[] {},"server",new String[] {}));
+				}
+				
+			
 
 			}
 			else {
@@ -95,7 +102,6 @@ public class ClientThread extends Thread {
 				}
 				System.out.println("INFO: "+username+" login success");
 				oos.writeObject(new MessagePacket(Message.LOGIN_SUCCESS, new String[] {},"server",new String[] {}));
-
 			}
 		}catch (IOException | ClassNotFoundException e) {
 			System.out.println("ERROR: NOT POSSIBLE TO ANSWER "+username);

@@ -28,17 +28,17 @@ public class ClientInfo implements Serializable {
 		photos_ids = new ArrayList<Long>();
 	}
 	
-	public boolean addFollower(String username) {
-		if(followers.contains(username))
-			return false;
-		followers.add(username);
-		return true;
-	}
-	
-	public boolean addFollowing(String username) {
+	public boolean nowFollowing(String username) {
 		if(following.contains(username))
 			return false;
 		following.add(username);
+		return true;
+	}
+	
+	public boolean newFollower(String username) {
+		if(followers.contains(username))
+			return false;
+		followers.add(username);
 		return true;
 	}
 	

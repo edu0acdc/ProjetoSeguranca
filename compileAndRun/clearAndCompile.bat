@@ -1,12 +1,12 @@
 @ECHO OFF
 cd server
-rm -R projeto1
-rm -R server
-rm server.jar
+del projeto1
+del server
+del server.jar
 cd ..
 cd client
-rm -R projeto1
-rm -R client
-rm client.jar
+del projeto1
+del client
+del client.jar
 cd ..
 ./compileALL.bat

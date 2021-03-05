@@ -22,6 +22,7 @@ public class RunServer extends Thread{
 			Server s = new Server(Integer.valueOf(args[1]));
 			s.start();
 		} catch (IOException e) {
+			e.printStackTrace();
 			System.out.println("ERROR: FATAL ERROR WHILE STARTING SERVER");
 		}
 		

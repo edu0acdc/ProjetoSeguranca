@@ -1,1 +1,2 @@
-admin:ADMIN:admin
+test:test:test
+admin:admin:admin
