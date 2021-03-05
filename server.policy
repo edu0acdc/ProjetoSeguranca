@@ -1,4 +1,4 @@
-grant codeBase "file: E:/Ambiente de Trabalho - atalhos/FCUL/3º Ano/2ºSemestre/SC/Projeto/git/compileAndRun/server/*" {
+grant codeBase "file:compileAndRun${/}server${/}server.jar" {
 	permission java.net.SocketPermission "localhost:45678", "connect,accept,listen";
-	permission java.io.FilePermission "E:\\Ambiente de Trabalho - atalhos\\FCUL\\3º Ano\\2ºSemestre\\SC\Projeto\\git\\server\\*", "read,write";
+	permission java.io.FilePermission "file:compileAndRun${/}server${/}server", "read,write";
 };
