@@ -119,6 +119,7 @@ public class DatabaseClients {
 		}
 		
 		
+		
 		clients.put(username,new ClientInfo(username,password,nome_de_user));
 		return save();
 	}

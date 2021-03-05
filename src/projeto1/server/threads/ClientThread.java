@@ -86,16 +86,17 @@ public class ClientThread extends Thread {
 				oos.writeObject(new MessagePacket(Message.LOGIN_SUCCESS, new String[] {},"server",new String[] {}));
 
 			}
-			client = rh.authenticate(username,password);
-			if(client == null) {
-				System.out.println("ERROR: "+username+" LOGIN FAILED");
-				oos.writeObject(new MessagePacket(Message.LOGIN_FAIL, new String[] {},"server",new String[] {}));
-				return false;
+			else {
+				client = rh.authenticate(username,password);
+				if(client == null) {
+					System.out.println("ERROR: "+username+" LOGIN FAILED");
+					oos.writeObject(new MessagePacket(Message.LOGIN_FAIL, new String[] {},"server",new String[] {}));
+					return false;
+				}
+				System.out.println("INFO: "+username+" login success");
+				oos.writeObject(new MessagePacket(Message.LOGIN_SUCCESS, new String[] {},"server",new String[] {}));
+
 			}
-			System.out.println("INFO: "+username+" login success");
-			oos.writeObject(new MessagePacket(Message.LOGIN_SUCCESS, new String[] {},"server",new String[] {}));
-
-
 		}catch (IOException | ClassNotFoundException e) {
 			System.out.println("ERROR: NOT POSSIBLE TO ANSWER "+username);
 			return false;

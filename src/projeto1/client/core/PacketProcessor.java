@@ -68,6 +68,7 @@ public class PacketProcessor {
 			System.out.println(packet.getINFO());
 		}
 		else {
+			System.out.println(Message.getDescription(packet.getMsg()));
 			System.out.println("ERROR: SOMETHING WENT WRONG");
 		}
 

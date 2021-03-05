@@ -1,2 +1,2 @@
-sussurro:Sussurro:coco123
-regras:Regras:coco321
+admin:admin:admin
+Sussu:sussu:123
