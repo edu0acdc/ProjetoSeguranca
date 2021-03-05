@@ -106,7 +106,7 @@ public class DatabaseClients {
 		
 	}
 	
-	public boolean createClient(String username,String password, String nome_de_user) {
+	public synchronized boolean createClient(String username,String password, String nome_de_user) {
 		if(clients.containsKey(username)) {
 			System.out.println("Username already in use");
 			return false;

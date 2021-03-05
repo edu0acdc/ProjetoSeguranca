@@ -78,7 +78,7 @@ public class DatabaseGroups {
 		return groups.get(groupID).getOwner().contentEquals(username);
 	}
 
-	public boolean createGroup(String groupID, String owner) {
+	public synchronized boolean createGroup(String groupID, String owner) {
 		if(groups.containsKey(groupID))
 			return false;
 		groups.put(groupID,new Group(groupID, owner));
