@@ -210,16 +210,16 @@ public class PacketProcessor {
 			if(results.length == 2) {
 				for (int i = 0; i < results.length; i++) {
 					if(i == 0) {
-						System.out.println("Own");
+						System.out.println("--Own--");
 					}
 					else {
-						System.out.println("Member Of");
+						System.out.println("--Member Of--");
 					}
 					String[] r = (String[]) results[i];
 					for (int j = 0; j < r.length; j++) {
 						System.out.println(r[j]);
+						System.out.println("|||||||||||");
 					}
-					System.out.println();
 				}
 			}
 			else {

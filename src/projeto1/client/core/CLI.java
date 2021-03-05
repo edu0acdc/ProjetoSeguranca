@@ -35,7 +35,6 @@ public class CLI {
 		if(aux.length == 0) {
 			return null;
 		}
-
 		switch (aux[0]) {
 		case "f":
 		case "follow":
@@ -59,13 +58,13 @@ public class CLI {
 		case "newgroup":
 			return newGroup(cmd);
 		case "a":
-		case "adduser":
+		case "addu":
 			return addUser(cmd);
 		case "r":
-		case "removeuser":
+		case "removeu":
 			return removeUser(cmd);
 		case "g":
-		case "groupinfo":
+		case "ginfo":
 			return groupInfo(cmd);
 		case "m":
 		case "msg":

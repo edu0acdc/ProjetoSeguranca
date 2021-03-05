@@ -41,7 +41,7 @@ public class Group implements Serializable {
 	}
 	
 	public boolean addMember(String username) {
-		if(members.contains(username))
+		if(members.contains(username) || owner.contentEquals(username))
 			return false;
 		members.add(username);
 		return true;
@@ -61,7 +61,7 @@ public class Group implements Serializable {
 	
 	@Override
 	public String toString() {
-		StringBuilder bob = new StringBuilder("Owner:"+owner+"\nMembers:");
+		StringBuilder bob = new StringBuilder(groupID+"\nOwner:"+owner+"\nMembers:");
 		for (String string : members) {
 			bob.append(string+";");
 		}
