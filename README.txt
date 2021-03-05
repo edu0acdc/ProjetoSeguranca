@@ -34,6 +34,12 @@ Código
    depois de uma reflexão sobre o enunciado o algoritmo foi alterado para todos clientes de um grupo ter um historico comum que só quando cresce quando todos os membros lerem
    uma certa mensagem, i.e, todos os membros ainda pertecentes ao grupo à data do envio da mensagem fizerem collect da mesma.
 
+-> As fotos para o método post devem ser colocadas na pasta client/photos.
+
+-> Visto que não é feita nenhuma referência a ser possivel dois clientes na mesma máquina, a pasta client é unica para qualquer execução do client.jar
+
+
+
 ------------------------------------------------------------------------------------------------
 
 Compilação e Execução

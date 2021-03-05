@@ -91,12 +91,16 @@ public class PacketProcessor {
 	private void processViewFollowers(MessagePacket packet) {
 		if(packet.getMsg() == Message.SUCCESS) {
 			String[] followers = (String[]) packet.getResults()[0];
+			if(followers.length == 0) {
+				System.out.println("You have no followers");
+			}
 			for (int i = 0; i < followers.length; i++) {
 				System.out.println(followers[i]);
 			}
 		}
 		else if(packet.getMsg() == Message.FAIL) {
-
+			System.out.print("FAILED: ");
+			System.out.println(packet.getINFO());
 		}
 		else {
 			System.out.println("ERROR: SOMETHING WENT WRONG");

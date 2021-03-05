@@ -104,13 +104,13 @@ public class CLI {
 
 	private MessagePacket message(String cmd) {
 		String[] aux = cmd.split(" ");
-		if(aux.length != 3) {
+		if(aux.length < 3) {
 			return null;
 		}
 		
 		StringBuilder bob = new StringBuilder();
 		for (int i = 2; i < aux.length; i++) {
-			bob.append(aux[i]);
+			bob.append(aux[i]+ " ");
 		}
 		return new MessagePacket(Message.MSG, new String[]{aux[1],bob.toString()},username,new String[] {});
 	}

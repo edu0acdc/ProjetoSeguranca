@@ -134,7 +134,6 @@ public class DatabaseClients {
 				writer.append(username+":"+nome+":"+password+"\n");
 				FileOutputStream fos = new FileOutputStream(new File("server/"+username+"/"+username+".info"));
 				ObjectOutputStream oos = new ObjectOutputStream(fos);
-				System.out.println(entry.getKey()+"|"+ entry.getValue().getFollowers().length + "|" + entry.getValue().getFollowing().length);
 				oos.writeObject(entry.getValue());
 				oos.close();
 			}
