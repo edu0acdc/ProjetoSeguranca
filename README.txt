@@ -17,7 +17,7 @@ Estrutura
       |--> client (pasta afeta ao cliente gerada pelos testes em Eclipse)
       |--> server (pasta afeta ao servidor gerada pelos testes em Eclipse) 
       |--> src (Código-Fonte)
-      |--> compileAndRun (pasta com scripts para gerar .class e .jar apartir do código-fonte
+      |--> compileAndRun (pasta com scripts para gerar .class e .jar apartir do código-fonte)
  
 ------------------------------------------------------------------------------------------------
 
@@ -32,8 +32,7 @@ Código
 
 -> Sobre os métodos msg/collect/history foi primeiramente criado um algoritmo em que cada cliente tinha o seu historico que iria aumentar cada vez que o mesmo fizesse collect,
    depois de uma reflexão sobre o enunciado o algoritmo foi alterado para todos clientes de um grupo ter um historico comum que só quando cresce quando todos os membros lerem
-   uma certa mensagem, i.e, todos os membros ainda pertecentes ao grupo à data do envio da mensagem fizerem collect da mesma. Por fim, quando uma pessoa envia uma mensagem é assumida
-   que o sender já viu a mensagem que enviou.
+   uma certa mensagem, i.e, todos os membros ainda pertecentes ao grupo à data do envio da mensagem fizerem collect da mesma. Por fim, quando uma pessoa envia uma mensagem é  assumido que o sender já viu a mensagem que enviou.
 
 -> As fotos para o método post devem ser colocadas na pasta client/photos.
 
