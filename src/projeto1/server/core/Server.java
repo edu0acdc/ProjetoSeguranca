@@ -1,20 +1,23 @@
 package projeto1.server.core;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
+
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+
 import projeto1.server.threads.*;
 
 public class Server extends Thread{
 	
 	
 	private int port;
-	private ServerSocket ss;
+	private SSLServerSocket ss;
 	private ClientThreadManager manager;
 
 	public Server(int port) throws IOException {
 		this.port = port;
-		ss = new ServerSocket(port);
+		ss = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(port);
 		manager = ClientThreadManager.getManager();
 	}
 	

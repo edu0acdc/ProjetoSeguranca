@@ -14,7 +14,6 @@ public class ClientThreadManager{
 	
 	private ClientThreadManager() {
 		clients = new ArrayList<>();
-		
 		sr = new SecureRandom();
 	}
 	
@@ -31,6 +30,7 @@ public class ClientThreadManager{
 		ClientThread c = new ClientThread(socket,this,b);
 		c.start();
 		clients.add(c);
+		System.out.println("INFO: New client detected with nonce: "+b);
 		return true;
 	}
 

@@ -1,9 +1,9 @@
 package projeto1.server.core;
 import java.io.FileInputStream;
 import java.io.Serializable;
-import java.security.KeyStore;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,12 +35,12 @@ public class ClientInfo implements Serializable {
 
 	private void loadPublicKey() {
 		try {
-			FileInputStream kfile = new FileInputStream("myKeys"); //keystore
-			KeyStore kstore = KeyStore.getInstance("JCEKS");
-			kstore.load(kfile, "123456".toCharArray()); //password da keystore
-			Certificate cert = kstore.getCertificate(username); //alias da keypair
+			FileInputStream fis = new FileInputStream(certificadoPath);
+			CertificateFactory cf = CertificateFactory.getInstance("X509");
+			Certificate cert = cf.generateCertificate(fis);
 			publicKey = cert.getPublicKey();
 		}catch (Exception e) {
+			e.printStackTrace();
 			publicKey = null;
 		}
 	}

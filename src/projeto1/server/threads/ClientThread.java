@@ -33,11 +33,9 @@ public class ClientThread extends Thread {
 
 	@Override
 	public void run() {
-
 		try {
 			ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
 			ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
-
 
 			//Login process
 			if(!tryLogin(ois,oos)) killClient();
@@ -56,10 +54,9 @@ public class ClientThread extends Thread {
 			}
 
 		} catch (IOException e) {
-			String user = client == null ? "": (client.getUsername() == null ? "" : client.getUsername());
+			String user = client == null ? "": client.getUsername();
 			System.out.println("ERROR ("+user+") : CONNECTION LOST ");
 		}
-
 		manager.deleteFromManager(this);
 	}
 
@@ -90,7 +87,7 @@ public class ClientThread extends Thread {
 		if(!rh.existsUser(username)) {
 			//Create
 			try {
-				MessagePacket need_cert_packet = new MessagePacket(Message.NEED_CERT, null, SERVER_NAME, null);
+				MessagePacket need_cert_packet = new MessagePacket(Message.NEED_CERT_AND_SIGN, null, SERVER_NAME, null);
 				need_cert_packet.setLoginInfo(new LoginInfo(nonce, null,null));
 				oos.writeObject(need_cert_packet);
 
@@ -104,44 +101,76 @@ public class ClientThread extends Thread {
 
 				try {
 					client = rh.register(username,register_packet.getLoginInfo());
-					if(client == null) return false;
+					if(client == null) {
+						System.out.println("NULL");
+						return false;
+					}
+					MessagePacket ps = new MessagePacket(Message.LOGIN_SUCCESS, new String[] {}, SERVER_NAME,new String[] {});
+					ps.setINFO("Valid login info.");
+					oos.writeObject(ps);
+					return true;
 				}catch (InvalidCertificateException e) {
 					// ------------
 					MessagePacket ps = new MessagePacket(Message.LOGIN_FAIL, new String[] {}, SERVER_NAME,new String[] {});
 					ps.setINFO("Invalid login info.");
 					oos.writeObject(ps);
-				}				
+				}	
+
+				
 
 			} catch (IOException | ClassNotFoundException e) {
 				e.printStackTrace();
+				return false;
 			}
 		}
 		else {
-			//Login
-			ClientInfo ci = rh.authenticate(username, login_packet.getLoginInfo());
-			if(ci == null) {
-				//---
-				MessagePacket ps = new MessagePacket(Message.LOGIN_FAIL, new String[] {}, SERVER_NAME,new String[] {});
-				ps.setINFO("Wrong login flow.");
-				try {
-					oos.writeObject(ps);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+			try {
+				MessagePacket need_cert_packet = new MessagePacket(Message.NEED_SIGN, null, SERVER_NAME, null);
+				need_cert_packet.setLoginInfo(new LoginInfo(nonce, null,null));
+				oos.writeObject(need_cert_packet);
+			} catch (IOException e1) {
+				e1.printStackTrace();
 				return false;
 			}
-
-			client = ci;
+			
+			try {
+				login_packet = (MessagePacket) ois.readObject();
+				if(login_packet.getMsg() != Message.TRY_SIGN) {
+					MessagePacket ps = new MessagePacket(Message.LOGIN_FAIL, new String[] {}, SERVER_NAME,new String[] {});
+					ps.setINFO("Wrong login flow.");
+					oos.writeObject(ps);
+					return false;
+				}
+				//Login
+				ClientInfo ci = rh.authenticate(username, login_packet.getLoginInfo());
+				if(ci == null) {
+					//---
+					MessagePacket ps = new MessagePacket(Message.LOGIN_FAIL, new String[] {}, SERVER_NAME,new String[] {});
+					ps.setINFO("Wrong login flow.");
+					oos.writeObject(ps);
+					return false;
+				}
+				client = ci;
+				MessagePacket ps = new MessagePacket(Message.LOGIN_SUCCESS, new String[] {}, SERVER_NAME,new String[] {});
+				ps.setINFO("Valid login info.");
+				oos.writeObject(ps);
+				return true;
+			}catch (IOException | ClassNotFoundException e) {
+				e.printStackTrace();
+				return false;
+			}			
 		}		
 		return true;
 	}
 
 	private void killClient() {
+		System.out.println("Client Killed");
 		try {
 			s.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		manager.deleteFromManager(this);
 		this.interrupt();
 	}
 }

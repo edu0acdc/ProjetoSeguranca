@@ -19,7 +19,7 @@ public class RunServer{
 				System.out.println(USAGE);
 				return;
 			}
-			SystemLoader.load(args[2]);
+			SystemLoader.load(args[2],args[3]);
 			Server s = new Server(Integer.valueOf(args[1]));
 			s.start();
 		} catch (IOException e) {

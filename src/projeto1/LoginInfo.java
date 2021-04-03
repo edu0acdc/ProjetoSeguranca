@@ -13,8 +13,10 @@ public class LoginInfo implements Serializable {
 	private String certificate;
 			
 	public LoginInfo(byte[] nonce,byte[] signature,String certificate) {
-		this.nonce = nonce.clone();
-		this.signature = signature.clone();
+		if(nonce != null)
+			this.nonce = nonce.clone();
+		if(signature != null)
+			this.signature = signature.clone();
 		this.certificate = certificate;
 	}
 	

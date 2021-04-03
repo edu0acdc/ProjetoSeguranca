@@ -31,6 +31,14 @@ public class DatabaseKeys {
 		return singleton;
 	}
 	
+	public Key getKey(String alias,String password) {
+		try {
+			return ks.getKey(alias, password.toCharArray());
+		} catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 	
 	
 	public boolean hasAlias(String alias) {

@@ -12,8 +12,10 @@ public class Message {
 	public static final int LOGIN_WRONG_PASSWORD = 403;
 	public static final int NEED_USER_NAME = 404;
 	public static final int USER_NAME = 405;
-	public static final int NEED_CERT = 406;
+	public static final int NEED_CERT_AND_SIGN = 406;
 	public static final int TRY_REGISTER = 407;
+	public static final int NEED_SIGN = 408;
+	public static final int TRY_SIGN = 409;
 	
 	// 500-599 WARNINGS
 	public static final int SEND = 500;

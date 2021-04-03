@@ -7,7 +7,7 @@ public class KeysLoader {
 
 	public static boolean checkKeystoreAndCertifcate(String keystore){
 		File ks = new File(keystore);
-		File cert = new File("keyRSApub.cer");
+		File cert = new File("serverCA.cer");
 		return ks.exists() && cert.exists();
 	}
 

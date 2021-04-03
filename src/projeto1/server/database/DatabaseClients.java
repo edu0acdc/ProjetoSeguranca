@@ -101,21 +101,25 @@ public class DatabaseClients {
 		if(clients.containsKey(username)) {
 			System.out.println("Username already in use");
 			return null;
-		}
+		}	
 		
+		ClientInfo c = new ClientInfo(username,certificado);
+		if(c.getPublicKey() == null) {
+			System.out.println("NO PUBLIC KEY FOUND");
+			return null;
+		}
 		File folder = new File("server/"+username);
 		if(!folder.mkdir()) {
 			System.out.println("ERROR: Not possible to create personal folder ("+username+"), new client denied.");
+			clients.remove(username);
 			return null;
 		}
-		
-		
-		
-		clients.put(username,new ClientInfo(username,certificado));
+		clients.put(username,c);
 		if(save()) {
 			return clients.get(username);
 		}
 		else {
+			System.out.println("CANT SAVE");
 			clients.remove(username);
 			return null;
 		}
@@ -135,6 +139,7 @@ public class DatabaseClients {
 			}
 			writer.close();
 		}catch (IOException e) {
+			e.printStackTrace();
 			System.out.println("Error while saving");
 			return false;
 		}

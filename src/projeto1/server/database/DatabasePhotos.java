@@ -6,10 +6,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 
 import projeto1.server.core.ClientInfo;
 import projeto1.server.core.Photo;
+import projeto1.server.core.SystemSeiTchizServer;
 
 public class DatabasePhotos {
 
@@ -24,7 +33,6 @@ public class DatabasePhotos {
 	private DatabasePhotos() {
 		load();
 		checkNextID();
-		save();
 	}
 	
 	private void checkNextID() {
@@ -38,20 +46,24 @@ public class DatabasePhotos {
 	@SuppressWarnings("unchecked")
 	private void load() {
 		try {
+			Cipher c = Cipher.getInstance("DES");
+			c.init(Cipher.DECRYPT_MODE,new SecretKeySpec(SystemSeiTchizServer.getLoadedInstance().getPrivateKey().getEncoded(),"DES"));
 			
-			System.out.println("INFO: Loading photos database");
-			FileInputStream fis = new FileInputStream(new File(FOLDER_NAME+"/photos_database.data"));
-			ObjectInputStream ois = new ObjectInputStream(fis);
+			
+			FileInputStream fis = new FileInputStream(FOLDER_NAME+"/photos_database.cif");
+			CipherInputStream cis = new CipherInputStream(fis, c);
+			ObjectInputStream ois = new ObjectInputStream(cis);
 			photos = (HashMap<Long, Photo>) ois.readObject();
-			next_id = photos.size();
 			ois.close();
-			
-		}catch (IOException | ClassNotFoundException e) {
+			cis.close();
+			fis.close();
+		}catch (IOException | ClassNotFoundException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
 			System.out.println("ERROR: Not possible to load photos database, creating new one");
-			photos = new HashMap<Long, Photo>();
+			photos = new HashMap<>();
 			next_id = 0;
 			return;
 		}
+		checkNextID();
 		System.out.println("INFO: Photos database loaded");
 	}
 	
@@ -83,12 +95,18 @@ public class DatabasePhotos {
 	
 	public boolean save() {
 		try {
-			FileOutputStream fos = new FileOutputStream(FOLDER_NAME+"/photos_database.data");
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			Cipher c = Cipher.getInstance("DES");
+			c.init(Cipher.ENCRYPT_MODE, SystemSeiTchizServer.getLoadedInstance().getPrivateKey());
+			FileOutputStream fos = new FileOutputStream(FOLDER_NAME+"/photos_database.cif");
+			CipherOutputStream cos = new CipherOutputStream(fos, c);
+			ObjectOutputStream oos = new ObjectOutputStream(cos);
 			oos.writeObject(photos);
 			oos.close();
-		}catch (IOException e) {
+			fos.close();
+			cos.close();
+		}catch (IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
 			System.out.println("ERROR: FATAL ERROR WHILE SAVING PHOTOS DATABASE");
+			e.printStackTrace();
 			return false;
 		}
 		return true;

@@ -6,75 +6,63 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.PrivateKey;
+import java.security.Signature;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
+import projeto1.LoginInfo;
 import projeto1.Message;
 import projeto1.MessagePacket;
 import projeto1.PartialFile;
+import projeto1.client.exceptions.ClientLoadingException;
 
 public class Client extends Thread{
 
 	private String ip;
 	private String id;
-	private String password;
 	private int port;
-	private Socket s;
+	private SSLSocket s;
 	private PacketProcessor pp;
 	private CLI cli ;
+	private String truststore;
+	private String keystore;
+	private String keystore_password;
+	private PrivateKey private_key;
+	private String cert_path;
 
-	public Client(String ip,int port, String client_id, String password) {
-		this.password = password;
-		this.id = client_id;
+
+	public Client(String ip, int port, String clientID, String truststore, String keystore,
+			String keystore_password) {
+		this.truststore = truststore;
+		this.keystore = keystore;
+		this.keystore_password = keystore_password;
+		this.id = clientID;
 		this.ip = ip;
 		this.port = port;
-		this.cli = new CLI(id);
+		this.cli = new CLI(clientID);
 		this.pp = new PacketProcessor();
-		try {
-			System.out.println("INFO: Trying to connect to "+ip+" at port "+port);
-			s = new Socket(ip, port);
-		} catch (UnknownHostException e) {
-			System.out.println("Error: Not possible to reach host");
-			s = null;
-		} catch (IOException e) {
-			System.out.println("Error: Not possible to create socket");
-			s = null;
-		}
-
-
+		this.cert_path = "PubKeys/"+clientID+".cer";
+	
+		
+		
 	}
-
-	public Client(String ip,int port, String client_id) {
-		this.password = null;
-		this.id = client_id;
-		this.ip = ip;
-		this.port = port;
-		this.cli = new CLI(id);
-		this.pp = new PacketProcessor();
-		try {
-			System.out.println("INFO: Trying to connect to "+ip+" at port "+port);
-			s = new Socket(ip, port);
-		} catch (UnknownHostException e) {
-			System.out.println("ERROR: Not possible to reach host");
-			s = null;
-		} catch (IOException e) {
-			System.out.println("ERROR: Not possible to create socket");
-			s = null;
-		}
-
-
-
-	}
-
-
-
-
-
+	
 
 
 	@Override
 	public void run() {
 		load();
+		System.out.println("INFO: Trying to connect to "+ip+" at port "+port);
+		try {
+			s = (SSLSocket) (SSLSocketFactory.getDefault().createSocket(ip, port));
+		} catch (UnknownHostException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 		if(s == null) {
 			System.out.println("ERROR: SOCKET NOT READY");
 			return;
@@ -84,10 +72,6 @@ public class Client extends Thread{
 
 		System.out.println("INFO: Running Client");
 		
-		if(password == null) {
-			password = cli.askPassword();
-		}
-
 		try {
 			ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
 			ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
@@ -131,38 +115,12 @@ public class Client extends Thread{
 
 
 	private void load() {
-		System.out.println("INFO: Checking integrity of system");
-		File folder_c = new File("./client");
-		if(!folder_c.exists() || !folder_c.isDirectory()) {
-			System.out.println("ERROR: Client folder not found, creating new one");
-			if(!folder_c.mkdir()) {
-				System.out.println("ERROR: Critical error, not possible to create client folder, exiting with status 1");
-				System.exit(1);
-			}
-			System.out.println("INFO: Client folder created");
+		try {
+			ClientLoader.load(this.id, this.truststore, this.keystore, this.keystore_password);
+			private_key = ClientLoader.getPrivateKey(this.id,this.keystore, this.keystore_password);
+		}catch (ClientLoadingException e) {
+			e.printStackTrace();
 		}
-
-		File photos = new File("client/photos");
-		if(!photos.exists() || !photos.isDirectory()) {
-			System.out.println("ERROR: Photos folder not found, creating new one");
-			if(!photos.mkdir()) {
-				System.out.println("ERROR: Critical error, not possible to create photos folder, exiting with status 1");
-				System.exit(1);
-			}
-			System.out.println("INFO: Photos folder created");
-		}
-
-		File wall = new File("client/wall");
-		if(!wall.exists() || !wall.isDirectory()) {
-			System.out.println("ERROR: Wall folder not found, creating new one");
-			if(!wall.mkdir()) {
-				System.out.println("ERROR: Wall error, not possible to create client folder, exiting with status 1");
-				System.exit(1);
-			}
-			System.out.println("INFO: Wall folder created");
-		}
-
-
 	}
 
 	private void wall(ObjectInputStream ois,MessagePacket to_send) {
@@ -204,7 +162,7 @@ public class Client extends Thread{
 
 	private boolean post(ObjectOutputStream oos, ObjectInputStream ois,MessagePacket to_send) {
 		String filename = to_send.getArgs()[0];
-		File f = new File("client/photos/"+filename);
+		File f = new File("client/"+id+"/photos/"+filename);
 		
 		try {
 			FileInputStream fis = new FileInputStream(f);
@@ -240,54 +198,65 @@ public class Client extends Thread{
 	private boolean tryLogin(ObjectInputStream ois,ObjectOutputStream oos) {
 		MessagePacket login_response = null;
 		try {
-			oos.writeObject(new MessagePacket(Message.LOGIN,new String[] {id,password},id,new String[] {}));
+			oos.writeObject(new MessagePacket(Message.LOGIN,new String[] {id},id,new String[] {}));
 			login_response = (MessagePacket) ois.readObject();
 		} catch (ClassNotFoundException | IOException e) {
 			System.out.println("ERROR: FATAL ERROR ON LOGIN");
 			return false;
 		}
-
-		if(login_response.getMsg() == Message.LOGIN_SUCCESS) {
-			System.out.println("INFO: LOGIN SUCCESSFULL"); 	 	
-			return true;
-		}
-		else if(login_response.getMsg() == Message.NEED_USER_NAME) {
-			String nome_de_user = cli.askNomeUser();
-			while(nome_de_user.trim().length() == 0) {
-				nome_de_user = cli.askNomeUser();
+		if(login_response.getMsg() == Message.NEED_CERT_AND_SIGN) {
+			LoginInfo li = login_response.getLoginInfo();
+			byte[] nonce = li.getNonce();
+			Signature s = null;
+			try {
+				s = Signature.getInstance("MD5withRSA");
+				s.initSign(private_key);
+				s.update(nonce);	
+				LoginInfo new_li = new LoginInfo(nonce, s.sign(), cert_path);
+				MessagePacket try_register = new MessagePacket(Message.TRY_REGISTER, null, id, null);
+				try_register.setLoginInfo(new_li);
+				oos.writeObject(try_register);
+			}catch (Exception e) {
+				e.printStackTrace();
+				return false;
 			}
 			try {
-				oos.writeObject(new MessagePacket(Message.USER_NAME,new String[] {nome_de_user},id,new String[] {})); //send
-				
 				MessagePacket response = (MessagePacket) ois.readObject();
-				if(response.getMsg() == Message.LOGIN_SUCCESS) {
-					System.out.println("INFO: LOGIN SUCCESSFULL"); 	 	
-					return true;
-				}
-				else if(response.getMsg() == Message.LOGIN_FAIL) {
-					System.out.println("ERROR: LOGIN FAILED");
-					return false;
-				}
-				else {
-					System.out.println("ERROR: FATAL ERROR");
-					return false;
-				}
-			} catch (IOException | ClassNotFoundException e) {
-				System.out.println("ERROR: CONNECTION LOST");
+				return response.getMsg() == Message.LOGIN_SUCCESS;
+			} catch (ClassNotFoundException | IOException e) {
 				e.printStackTrace();
 				return false;
 			}
 		}
-		else if(login_response.getMsg() == Message.LOGIN_FAIL) {
-			System.out.println("ERROR: LOGIN FAILED");
+		else if(login_response.getMsg() == Message.NEED_SIGN) {
+			LoginInfo li = login_response.getLoginInfo();
+			byte[] nonce = li.getNonce();
+			Signature s = null;
+			try {
+				s = Signature.getInstance("MD5withRSA");
+				s.initSign(private_key);
+				s.update(nonce);	
+				LoginInfo new_li = new LoginInfo(nonce, s.sign(), null);
+				MessagePacket try_sign = new MessagePacket(Message.TRY_SIGN, null, id, null);
+				try_sign.setLoginInfo(new_li);
+				oos.writeObject(try_sign);
+			}catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+						
+			try {
+				MessagePacket response = (MessagePacket) ois.readObject();
+				return response.getMsg() == Message.LOGIN_SUCCESS;
+			} catch (ClassNotFoundException | IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+			
 		}
-		else if (login_response.getMsg() == Message.LOGIN_WRONG_PASSWORD){
-			System.out.println("ERROR: WRONG PASSWORD");
-		}else {
-			System.out.println("ERROR: FATAL ERROR");
-
+		else {
+			return false;
 		}
-		return false;
 	}
 
 }

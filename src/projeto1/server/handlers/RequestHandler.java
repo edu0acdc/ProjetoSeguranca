@@ -42,7 +42,7 @@ public class RequestHandler {
 			return null;
 		
 		try {
-			Signature s = Signature.getInstance("RSA");
+			Signature s = Signature.getInstance("MD5withRSA");
 			s.initVerify(pk);
 			s.update(info.getNonce());
 			if(s.verify(info.getSignature())) {
@@ -71,7 +71,7 @@ public class RequestHandler {
 			Certificate cert = cf.generateCertificate(fis);
 			PublicKey publicKey = cert.getPublicKey();
 			
-			Signature s = Signature.getInstance("RSA");
+			Signature s = Signature.getInstance("MD5withRSA");
 			s.initVerify(publicKey);
 			s.update(loginInfo.getNonce());
 			if(s.verify(loginInfo.getSignature())) {

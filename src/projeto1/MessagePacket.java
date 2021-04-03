@@ -20,7 +20,8 @@ public class MessagePacket implements Serializable{
 	
 	public MessagePacket(int message,String[] args,String username,String[] files) {
 		this.msg = message;
-		this.args = args.clone();
+		if(args != null)
+			this.args = args.clone();
 		this.sender = username;
 		info = "";
 		results = new ArrayList<Object>();

@@ -4,4 +4,11 @@ grant codeBase "file:bin" {
 	permission java.io.FilePermission "./server", "read,write";
 	permission java.io.FilePermission "server/-", "read,write";
 	permission java.util.PropertyPermission "user.dir", "read";
+	permission java.io.FilePermission "./PubKeys", "read,write";
+	permission java.io.FilePermission "PubKeys/-", "read,write";
+	permission java.io.FilePermission "keystore.server", "read,write";
+	permission java.io.FilePermission "serverCA.cer", "read,write";
+	permission java.util.PropertyPermission "javax.net.ssl.trustStore", "write";
+	permission java.util.PropertyPermission "javax.net.ssl.keyStore", "write";
+	permission java.util.PropertyPermission "javax.net.ssl.keyStorePassword", "write";
 };

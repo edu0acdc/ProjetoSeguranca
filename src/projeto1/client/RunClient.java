@@ -4,16 +4,16 @@ import projeto1.client.core.Client;
 
 public class RunClient{
 
-	
+	private static final String USAGE = "Error: Usage -> SeiTchiz <serverAddress> <truststore> <keystore> <keystore-password> <clientID>";
 	
 	public static void main(String[] args) {
-		if(args.length < 3 || args.length > 4) {
-			System.out.println("Error: Usage -> SeiTchiz <serverAddress> <clientID> [password]");
+		if(args.length != 6) {
+			System.out.println(USAGE);
 			return;
 		}
 		
 		if(!args[0].contentEquals("SeiTchiz")) {
-			System.out.println("Error: Usage -> SeiTchiz <serverAddress> <clientID> [password]");
+			System.out.println(USAGE);
 			return;
 		}
 		
@@ -25,15 +25,12 @@ public class RunClient{
 		if(addr.length == 2) 
 			port = Integer.parseInt(addr[1]);
 		
+		String truststore = args[2];
+		String keystore = args[3];
+		String keystore_password = args[4];
+		String clientID = args[5];
 		
-		Client client;
-		if(args.length == 4) {
-			client = new Client(ip, port,args[2],args[3]);
-		}
-		else {
-			client = new Client(ip, port,args[2]);
-		}		
-		
+		Client client = new Client(ip, port, clientID,truststore,keystore,keystore_password);
 		client.start();
 	}
 	

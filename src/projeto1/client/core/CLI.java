@@ -190,7 +190,7 @@ public class CLI {
 			return null;
 		}
 		
-		File f = new File("client/photos/"+aux[1]);
+		File f = new File("client/"+username+"/photos/"+aux[1]);
 		if(!f.exists()) {
 			System.out.println("ERROR: File not found on folder client/photos. "
 					+ "\nPlease copy your photo to client/photos folder and use name with extension (ex: photo.jpg)");
