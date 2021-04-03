@@ -1,40 +1,32 @@
 package projeto1.server;
 
 import java.io.IOException;
-
 import projeto1.server.core.Server;
-import projeto1.server.handlers.DatabaseLoader;
+import projeto1.server.exceptions.SystemLoadingException;
+import projeto1.server.handlers.SystemLoader;
 
-public class RunServer extends Thread{
+public class RunServer{
 
-	
-	public static void main(String[] args) {
-		DatabaseLoader.loadDatabase();
+	private static final String USAGE = "Usage -> SeiTchizServer [port] [keystore] [keystore-password]";
+
+	public static void main(String[] args) {		
 		try {	
-			if(args.length != 2) {
-				System.out.println("Usage -> SeiTchizServer [port]");
+			if(args.length != 4) {
+				System.out.println(USAGE);
 				return;
 			}
 			if(!args[0].contentEquals("SeiTchizServer")) {
-				System.out.println("Usage -> SeiTchizServer [port]");
+				System.out.println(USAGE);
 				return;
 			}
+			SystemLoader.load(args[2]);
 			Server s = new Server(Integer.valueOf(args[1]));
 			s.start();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("ERROR: FATAL ERROR WHILE STARTING SERVER");
+		} catch (SystemLoadingException e1) {
+			System.exit(1);
 		}
-		
-		
-		
-		
-	}
-	
-	
-	@Override
-	public void run() {
-		// TODO Auto-generated method stub
-		super.run();
 	}
 }

@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -16,7 +17,7 @@ public class DatabaseClients {
 
 	
 	
-	private HashMap<String, ClientInfo> clients; // perigoso
+	private HashMap<String, ClientInfo> clients; 
 	private static DatabaseClients singleton = null;
 	
 	public static synchronized DatabaseClients getInstance() {
@@ -47,7 +48,7 @@ public class DatabaseClients {
 		}
 	}
 	
-	private void addFromTxt(String username,String nome_de_user,String password) {
+	private void addFromTxt(String username,String certificado) {
 		File dir = new File("server/"+username);
 		ClientInfo c = null;
 		if(!dir.exists() || !dir.isDirectory()) {
@@ -64,12 +65,11 @@ public class DatabaseClients {
 			c = (ClientInfo) ois.readObject();
 			
 			ois.close();
-			if(!c.getNomeUser().contentEquals(nome_de_user) || !c.getPassword().contentEquals(password)
-					|| !c.getUsername().contentEquals(username)) {
+			if(!c.getUsername().contentEquals(username)) {
 				throw new IOException();
 			}
 		}catch (IOException | ClassNotFoundException e) {
-			clients.put(username,new ClientInfo(username, password,nome_de_user));
+			clients.put(username,new ClientInfo(username,certificado));
 			return;
 		}
 		clients.put(c.getUsername(),c);
@@ -80,48 +80,45 @@ public class DatabaseClients {
 		try {
 			System.out.println("INFO: Loading clients database");
 			Scanner sc = new Scanner(new File("server/users.txt"));
-			clients = new HashMap<String, ClientInfo>();
+			clients = new HashMap<>();
 			while(sc.hasNextLine()) {
 				String line = sc.nextLine();
 				String[] aux = line.split(":");
-				if(aux.length != 3) continue;
-				addFromTxt(aux[0], aux[1],aux[2]);
+				if(aux.length != 2) continue;
+				addFromTxt(aux[0], aux[1]);
 			}
 			sc.close();			
 		}catch (IOException e) {
 			System.out.println("Error while loading users.txt, creating new database");
-			clients = new HashMap<String, ClientInfo>();
+			clients = new HashMap<>();
 			return;
 		}
 		System.out.println("INFO: Client database loaded");
 	}
 	
-	
-	private boolean authenticate(String username,String password) {
-		if(!clients.containsKey(username)) {
-			return false;
-		}
 		
-		return clients.get(username).getPassword().contentEquals(password);
-		
-	}
-	
-	public synchronized boolean createClient(String username,String password, String nome_de_user) {
+	public synchronized ClientInfo createClient(String username,String certificado) {
 		if(clients.containsKey(username)) {
 			System.out.println("Username already in use");
-			return false;
+			return null;
 		}
 		
 		File folder = new File("server/"+username);
 		if(!folder.mkdir()) {
 			System.out.println("ERROR: Not possible to create personal folder ("+username+"), new client denied.");
-			return false;
+			return null;
 		}
 		
 		
 		
-		clients.put(username,new ClientInfo(username,password,nome_de_user));
-		return save();
+		clients.put(username,new ClientInfo(username,certificado));
+		if(save()) {
+			return clients.get(username);
+		}
+		else {
+			clients.remove(username);
+			return null;
+		}
 	}
 
 	public synchronized boolean save() {
@@ -129,9 +126,8 @@ public class DatabaseClients {
 			FileWriter writer = new FileWriter(new File("server/users.txt"));
 			for (Map.Entry<String,ClientInfo> entry : clients.entrySet()) {
 				String username = entry.getKey();
-				String nome = entry.getValue().getNomeUser();
-				String password = entry.getValue().getPassword();			
-				writer.append(username+":"+nome+":"+password+"\n");
+				String cert = entry.getValue().getCertificadoPath();
+				writer.append(username+":"+cert+"\n");
 				FileOutputStream fos = new FileOutputStream(new File("server/"+username+"/"+username+".info"));
 				ObjectOutputStream oos = new ObjectOutputStream(fos);
 				oos.writeObject(entry.getValue());
@@ -145,14 +141,6 @@ public class DatabaseClients {
 		return true;
 	}
 	
-	public synchronized ClientInfo login(String username,String password) {
-		if(authenticate(username, password)) {
-			return clients.get(username);
-		}
-		
-		return null;
-				
-	}
 
 	public boolean checkAvailableUsername(String username) {
 		return !clients.containsKey(username);
@@ -182,6 +170,13 @@ public class DatabaseClients {
 
 	public ClientInfo getClient(String sender) {
 		return clients.get(sender);
+	}
+
+	public PublicKey getPublicKey(String username) {
+		if(clients.containsKey(username)) {
+			return clients.get(username).getPublicKey();
+		}
+		return null;
 	}
 	
 }

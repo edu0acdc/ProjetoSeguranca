@@ -67,7 +67,7 @@ public class Photo implements Serializable {
 	}
 	
 	public PhotoInfo toPhotoInfo() {
-		return new PhotoInfo(owner.getNomeUser(), likes.size(), new File(path).getName(),id);
+		return new PhotoInfo(owner.getUsername(), likes.size(), new File(path).getName(),id);
 	}
 	
 	

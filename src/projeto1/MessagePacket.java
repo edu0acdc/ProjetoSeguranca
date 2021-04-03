@@ -16,6 +16,7 @@ public class MessagePacket implements Serializable{
 	private List<Object> results;
 	private String info;
 	private String sender;
+	private LoginInfo login_info;
 	
 	public MessagePacket(int message,String[] args,String username,String[] files) {
 		this.msg = message;
@@ -23,6 +24,15 @@ public class MessagePacket implements Serializable{
 		this.sender = username;
 		info = "";
 		results = new ArrayList<Object>();
+	}
+	
+	
+	public void setLoginInfo(LoginInfo login_info) {
+		this.login_info = login_info;
+	}
+	
+	public LoginInfo getLoginInfo() {
+		return login_info;
 	}
 	
 	public String[] getFiles() {
