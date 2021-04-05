@@ -5,12 +5,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import projeto1.LoginInfo;
-import projeto1.Message;
-import projeto1.MessagePacket;
 import projeto1.server.core.ClientInfo;
 import projeto1.server.exceptions.InvalidCertificateException;
 import projeto1.server.handlers.RequestHandler;
+import projeto1.sharedCore.LoginInfo;
+import projeto1.sharedCore.Message;
+import projeto1.sharedCore.MessagePacket;
 
 public class ClientThread extends Thread {
 
@@ -102,7 +102,9 @@ public class ClientThread extends Thread {
 				try {
 					client = rh.register(username,register_packet.getLoginInfo());
 					if(client == null) {
-						System.out.println("NULL");
+						MessagePacket ps = new MessagePacket(Message.LOGIN_FAIL, new String[] {}, SERVER_NAME,new String[] {});
+						ps.setINFO("Null client info.");
+						oos.writeObject(ps);
 						return false;
 					}
 					MessagePacket ps = new MessagePacket(Message.LOGIN_SUCCESS, new String[] {}, SERVER_NAME,new String[] {});
@@ -146,7 +148,7 @@ public class ClientThread extends Thread {
 				if(ci == null) {
 					//---
 					MessagePacket ps = new MessagePacket(Message.LOGIN_FAIL, new String[] {}, SERVER_NAME,new String[] {});
-					ps.setINFO("Wrong login flow.");
+					ps.setINFO("Null client info.");
 					oos.writeObject(ps);
 					return false;
 				}

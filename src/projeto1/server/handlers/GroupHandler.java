@@ -1,10 +1,10 @@
 package projeto1.server.handlers;
 
-import projeto1.Message;
-import projeto1.MessageGroup;
-import projeto1.MessagePacket;
 import projeto1.server.database.DatabaseClients;
 import projeto1.server.database.DatabaseGroups;
+import projeto1.sharedCore.Message;
+import projeto1.sharedCore.MessageGroup;
+import projeto1.sharedCore.MessagePacket;
 
 public class GroupHandler {
 

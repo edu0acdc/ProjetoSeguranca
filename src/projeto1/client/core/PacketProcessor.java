@@ -1,9 +1,9 @@
 package projeto1.client.core;
 
-import projeto1.Message;
-import projeto1.MessageGroup;
-import projeto1.MessagePacket;
-import projeto1.PhotoInfo;
+import projeto1.sharedCore.Message;
+import projeto1.sharedCore.MessageGroup;
+import projeto1.sharedCore.MessagePacket;
+import projeto1.sharedCore.PhotoInfo;
 
 public class PacketProcessor {
 

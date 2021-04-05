@@ -13,11 +13,10 @@ import java.security.Signature;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import projeto1.LoginInfo;
-import projeto1.Message;
-import projeto1.MessagePacket;
-import projeto1.PartialFile;
-import projeto1.client.exceptions.ClientLoadingException;
+import projeto1.sharedCore.LoginInfo;
+import projeto1.sharedCore.Message;
+import projeto1.sharedCore.MessagePacket;
+import projeto1.sharedCore.PartialFile;
 
 public class Client extends Thread{
 
@@ -27,34 +26,24 @@ public class Client extends Thread{
 	private SSLSocket s;
 	private PacketProcessor pp;
 	private CLI cli ;
-	private String truststore;
-	private String keystore;
-	private String keystore_password;
 	private PrivateKey private_key;
 	private String cert_path;
 
 
-	public Client(String ip, int port, String clientID, String truststore, String keystore,
-			String keystore_password) {
-		this.truststore = truststore;
-		this.keystore = keystore;
-		this.keystore_password = keystore_password;
+	public Client(String ip, int port, String clientID, PrivateKey pk) {
 		this.id = clientID;
 		this.ip = ip;
 		this.port = port;
 		this.cli = new CLI(clientID);
 		this.pp = new PacketProcessor();
 		this.cert_path = "PubKeys/"+clientID+".cer";
-	
-		
-		
+		this.private_key = pk;
 	}
-	
+
 
 
 	@Override
 	public void run() {
-		load();
 		System.out.println("INFO: Trying to connect to "+ip+" at port "+port);
 		try {
 			s = (SSLSocket) (SSLSocketFactory.getDefault().createSocket(ip, port));
@@ -76,7 +65,10 @@ public class Client extends Thread{
 			ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
 			ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
 
-			if(!tryLogin(ois, oos)) return;
+			if(!tryLogin(ois, oos)) {
+				System.out.println("Login Failed");
+				return;
+			}
 			cli.printWelcome();
 			while(true) {
 				MessagePacket to_send = cli.menu();
@@ -106,22 +98,11 @@ public class Client extends Thread{
 			}
 
 
-		} catch (IOException e) {
+		} catch (IOException | ClassNotFoundException e) {
 			System.out.println("ERROR: CONNECTION LOST");
-			e.printStackTrace();
 		}
 	}
 
-
-
-	private void load() {
-		try {
-			ClientLoader.load(this.id, this.truststore, this.keystore, this.keystore_password);
-			private_key = ClientLoader.getPrivateKey(this.id,this.keystore, this.keystore_password);
-		}catch (ClientLoadingException e) {
-			e.printStackTrace();
-		}
-	}
 
 	private void wall(ObjectInputStream ois,MessagePacket to_send) {
 		try {
@@ -131,7 +112,7 @@ public class Client extends Thread{
 				if(pf.getFilename().trim().length() == 0) {
 					break;
 				}
-				File f = new File("client/wall/"+pf.getFilename());
+				File f = new File("client/"+id+"/wall/"+pf.getFilename());
 				FileOutputStream fos = new FileOutputStream(f);
 
 				while(true) {
@@ -160,11 +141,11 @@ public class Client extends Thread{
 
 	}
 
-	private boolean post(ObjectOutputStream oos, ObjectInputStream ois,MessagePacket to_send) {
+	private boolean post(ObjectOutputStream oos, ObjectInputStream ois,MessagePacket to_send) throws IOException, ClassNotFoundException {
 		String filename = to_send.getArgs()[0];
 		File f = new File("client/"+id+"/photos/"+filename);
 		
-		try {
+		
 			FileInputStream fis = new FileInputStream(f);
 			oos.writeObject(new PartialFile(new byte[] {},0,Message.NEW_FILE,filename));
 			while(true) {
@@ -183,12 +164,7 @@ public class Client extends Thread{
 				received = (MessagePacket) ois.readObject();
 			}
 			pp.processPacket(to_send.getMsg(),received);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		} catch (ClassNotFoundException e) {
-			return false;
-		}
+		
 
 		return true;
 
@@ -222,6 +198,7 @@ public class Client extends Thread{
 			}
 			try {
 				MessagePacket response = (MessagePacket) ois.readObject();
+				System.out.println(Message.getDescription(response.getMsg()));
 				return response.getMsg() == Message.LOGIN_SUCCESS;
 			} catch (ClassNotFoundException | IOException e) {
 				e.printStackTrace();
@@ -247,6 +224,7 @@ public class Client extends Thread{
 						
 			try {
 				MessagePacket response = (MessagePacket) ois.readObject();
+				System.out.println(Message.getDescription(response.getMsg()));
 				return response.getMsg() == Message.LOGIN_SUCCESS;
 			} catch (ClassNotFoundException | IOException e) {
 				e.printStackTrace();

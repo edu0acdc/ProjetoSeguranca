@@ -2,6 +2,7 @@ package projeto1.server.handlers;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.InvalidKeyException;
@@ -13,11 +14,11 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 
-import projeto1.LoginInfo;
-import projeto1.MessagePacket;
 import projeto1.server.core.ClientInfo;
 import projeto1.server.database.DatabaseClients;
 import projeto1.server.exceptions.InvalidCertificateException;
+import projeto1.sharedCore.LoginInfo;
+import projeto1.sharedCore.MessagePacket;
 
 public class RequestHandler {
 
@@ -65,8 +66,9 @@ public class RequestHandler {
 	}
 
 	public ClientInfo register(String username, LoginInfo loginInfo) throws InvalidCertificateException  {
+		FileInputStream fis = null;
 		try {
-			FileInputStream fis = new FileInputStream(loginInfo.getCertificate());
+			fis = new FileInputStream(loginInfo.getCertificate());
 			CertificateFactory cf = CertificateFactory.getInstance("X509");
 			Certificate cert = cf.generateCertificate(fis);
 			PublicKey publicKey = cert.getPublicKey();
@@ -75,14 +77,16 @@ public class RequestHandler {
 			s.initVerify(publicKey);
 			s.update(loginInfo.getNonce());
 			if(s.verify(loginInfo.getSignature())) {
+				fis.close();
 				return database.createClient(username, loginInfo.getCertificate());
 			}			
-			
 		} catch (CertificateException  | InvalidKeyException | SignatureException e) {
+			e.printStackTrace();
 			throw new InvalidCertificateException();
 		} catch (FileNotFoundException | NoSuchAlgorithmException e) {
 			e.printStackTrace();
-			return null;
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		return null;
 	}

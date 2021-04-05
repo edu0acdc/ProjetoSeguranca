@@ -3,8 +3,8 @@ package projeto1.client.core;
 import java.io.File;
 import java.util.Scanner;
 
-import projeto1.Message;
-import projeto1.MessagePacket;
+import projeto1.sharedCore.Message;
+import projeto1.sharedCore.MessagePacket;
 
 public class CLI {
 

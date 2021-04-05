@@ -36,7 +36,6 @@ public class DatabasePhotos {
 	}
 	
 	private void checkNextID() {
-		System.out.println("INFO: Checking next photo ID integrity");
 		while(photos.containsKey(next_id)) {
 			next_id++;
 		}
@@ -46,10 +45,8 @@ public class DatabasePhotos {
 	@SuppressWarnings("unchecked")
 	private void load() {
 		try {
-			Cipher c = Cipher.getInstance("DES");
-			c.init(Cipher.DECRYPT_MODE,new SecretKeySpec(SystemSeiTchizServer.getLoadedInstance().getPrivateKey().getEncoded(),"DES"));
-			
-			
+			Cipher c = Cipher.getInstance("AES");
+			c.init(Cipher.DECRYPT_MODE,new SecretKeySpec(SystemSeiTchizServer.getLoadedInstance().getPrivateKey().getEncoded(),"AES"));
 			FileInputStream fis = new FileInputStream(FOLDER_NAME+"/photos_database.cif");
 			CipherInputStream cis = new CipherInputStream(fis, c);
 			ObjectInputStream ois = new ObjectInputStream(cis);
@@ -57,13 +54,12 @@ public class DatabasePhotos {
 			ois.close();
 			cis.close();
 			fis.close();
-		}catch (IOException | ClassNotFoundException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
+		}catch (Exception e) {
 			System.out.println("ERROR: Not possible to load photos database, creating new one");
 			photos = new HashMap<>();
 			next_id = 0;
 			return;
 		}
-		checkNextID();
 		System.out.println("INFO: Photos database loaded");
 	}
 	
@@ -95,7 +91,7 @@ public class DatabasePhotos {
 	
 	public boolean save() {
 		try {
-			Cipher c = Cipher.getInstance("DES");
+			Cipher c = Cipher.getInstance("AES");
 			c.init(Cipher.ENCRYPT_MODE, SystemSeiTchizServer.getLoadedInstance().getPrivateKey());
 			FileOutputStream fos = new FileOutputStream(FOLDER_NAME+"/photos_database.cif");
 			CipherOutputStream cos = new CipherOutputStream(fos, c);

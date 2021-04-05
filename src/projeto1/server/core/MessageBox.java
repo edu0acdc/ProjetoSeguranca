@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import projeto1.MessageGroup;
+import projeto1.sharedCore.MessageGroup;
 
 public class MessageBox implements Serializable{
 

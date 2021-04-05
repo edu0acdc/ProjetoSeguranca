@@ -6,12 +6,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import projeto1.MessageGroup;
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+
 import projeto1.server.core.Group;
+import projeto1.server.core.SystemSeiTchizServer;
+import projeto1.sharedCore.MessageGroup;
 
 public class DatabaseGroups {
 
@@ -27,12 +36,16 @@ public class DatabaseGroups {
 	private void load() {
 		try {			
 			System.out.println("INFO: Loading groups database");
+			Cipher c = Cipher.getInstance("AES");
+			c.init(Cipher.DECRYPT_MODE,new SecretKeySpec(SystemSeiTchizServer.getLoadedInstance().getPrivateKey().getEncoded(),"AES"));
 			FileInputStream fis = new FileInputStream(new File(FOLDER_NAME+"/groups.data"));
-			ObjectInputStream ois = new ObjectInputStream(fis);
+			CipherInputStream cis = new CipherInputStream(fis, c);
+			ObjectInputStream ois = new ObjectInputStream(cis);
 			groups = (HashMap<String,Group>) ois.readObject();
 			ois.close();
-			
-		}catch (IOException | ClassNotFoundException e) {
+			cis.close();
+			fis.close();
+		}catch (IOException | ClassNotFoundException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
 			System.out.println("ERROR: Not possible to load groups database, creating new one");
 			groups = new HashMap<String, Group>();
 			return;
@@ -131,11 +144,16 @@ public class DatabaseGroups {
 	
 	public void save() {
 		try {
+			Cipher c = Cipher.getInstance("AES");
+			c.init(Cipher.ENCRYPT_MODE, SystemSeiTchizServer.getLoadedInstance().getPrivateKey());
 			FileOutputStream fos = new FileOutputStream(new File(FOLDER_NAME+"/groups.data"));
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			CipherOutputStream cos = new CipherOutputStream(fos, c);
+			ObjectOutputStream oos = new ObjectOutputStream(cos);
 			oos.writeObject(groups);
 			oos.close();
-		}catch (IOException e) {
+			cos.close();
+			fos.close();
+		}catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
 			System.out.println("ERROR: NOT POSSIBLE TO SAVE GROUPS DATABASE");
 		}
 	}

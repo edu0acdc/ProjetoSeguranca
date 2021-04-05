@@ -3,8 +3,8 @@ package projeto1.server.handlers;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import projeto1.Message;
-import projeto1.MessagePacket;
+import projeto1.sharedCore.Message;
+import projeto1.sharedCore.MessagePacket;
 
 public class PacketProcessorServer {
 

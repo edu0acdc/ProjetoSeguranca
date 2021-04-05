@@ -6,18 +6,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
-
-import projeto1.Message;
-import projeto1.MessagePacket;
-import projeto1.PartialFile;
-import projeto1.PhotoInfo;
 import projeto1.server.core.ClientInfo;
 import projeto1.server.core.Photo;
 import projeto1.server.database.DatabaseClients;
 import projeto1.server.database.DatabasePhotos;
+import projeto1.sharedCore.Message;
+import projeto1.sharedCore.MessagePacket;
+import projeto1.sharedCore.PartialFile;
+import projeto1.sharedCore.PhotoInfo;
 
 public class PhotoHandler {
 
@@ -76,11 +77,12 @@ public class PhotoHandler {
 			if(check.getMsg() == Message.NEW_FILE) {
 
 				FileOutputStream fos = new FileOutputStream(f);
-
+				MessageDigest md = MessageDigest.getInstance("SHA");
 				while(true) {
 					PartialFile pf = (PartialFile) ois.readObject();
 					if(pf.getMsg() == Message.END_OF_FILE)
 						break;
+					md.update(pf.getBytes());
 					fos.write(pf.getBytes(),0,pf.getLength());
 				}
 				fos.close();
@@ -94,6 +96,8 @@ public class PhotoHandler {
 			ps = new MessagePacket(Message.FAIL, new String[] {}, sender, new String[] {});
 			ps.setINFO("Not possible to post photo");
 			return ps;
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
 		}
 		ClientInfo c = clients.getClient(packet.getSender());
 		photos.addPhoto(f, c);
@@ -117,6 +121,13 @@ public class PhotoHandler {
 			for (int i = 0; i < phs.length; i++) {
 				phs[i] = photos.getPhoto(ids.get(i));
 				File f = phs[i].getFile();
+				try {
+					if(!phs[i].isValid()) {
+						continue;
+					}
+				} catch (NoSuchAlgorithmException e) {
+					continue;
+				}
 				FileInputStream fis = new FileInputStream(f);
 				PartialFile pf = new PartialFile(new byte[] {}, 0, Message.NEW_FILE, f.getName());
 				oos.writeObject(pf);
@@ -128,6 +139,7 @@ public class PhotoHandler {
 					}
 					oos.writeObject(new PartialFile(bytes, bread,Message.BYTES,f.getName()));
 				}
+				
 				fis.close();
 			}
 			PartialFile pf = new PartialFile(new byte[] {}, 0, Message.NO_MORE_FILES, "");

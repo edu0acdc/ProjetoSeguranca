@@ -1,4 +1,4 @@
-package projeto1;
+package projeto1.sharedCore;
 
 import java.io.Serializable;
 

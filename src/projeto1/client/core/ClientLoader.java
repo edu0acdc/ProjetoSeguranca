@@ -1,17 +1,55 @@
 package projeto1.client.core;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.security.KeyStore;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 
 import projeto1.client.exceptions.ClientLoadingException;
 
 public class ClientLoader {
 
-	
+
 	private ClientLoader() {}
-	
+
+	public static PrivateKey autoLoad(String client,String truststore) throws ClientLoadingException {
+		try {
+			checkInitialFolder();
+			checkPersonalFolder(client);
+			checkPhotosFolder(client);
+			checkWallFolder(client);
+			checkTrustStore(truststore);
+			return checkAutoKeyStoreAndCert(client);
+		}catch (Exception e) {
+			e.printStackTrace();
+			throw new ClientLoadingException();
+		}
+	}
+
+	private static PrivateKey checkAutoKeyStoreAndCert(String client) throws ClientLoadingException {
+		PrivateKey pk = SecurityChecker.getInstance().checkKeystore(client);
+		Certificate c = SecurityChecker.getInstance().getCertificate(client);
+		if(c == null) {
+			System.out.println("ERROR: PLEASE CREATE KEYSTORE AND GENERATE KEY PAIR");
+			throw new ClientLoadingException();
+		}
+
+		if(!(new File("PubKeys/"+client+".cer").exists())){
+			try {
+				FileOutputStream fos = new FileOutputStream("PubKeys/"+client+".cer");
+				fos.write(c.getEncoded());
+				fos.close();
+			}catch (IOException | CertificateEncodingException e) {
+				System.out.println("ERROR: ERROR WHILE GENERATING CERTIFICATE FROM KEYSTORE");
+				throw new ClientLoadingException();
+			}
+		}
+		return pk;
+
+	}
+
 	private static void checkInitialFolder() throws ClientLoadingException {
 		System.out.println("INFO: Checking integrity of system");
 		File folder_c = new File("./client");
@@ -24,26 +62,43 @@ public class ClientLoader {
 			System.out.println("INFO: Client folder created");
 		}
 	}
-	public static void load(String client,String truststore,String keystore,String keystore_password) throws ClientLoadingException {
-		checkInitialFolder();
-		checkPersonalFolder(client);
-		checkPhotosFolder(client);
-		checkWallFolder(client);
-		checkTrustStore(truststore);
-		checkKeyStoreAndCert(client,keystore,keystore_password);
+	public static PrivateKey load(String client,String truststore,String keystore,String keystore_password) throws ClientLoadingException {
+		try {
+			checkInitialFolder();
+			checkPersonalFolder(client);
+			checkPhotosFolder(client);
+			checkWallFolder(client);
+			checkTrustStore(truststore);
+			return checkKeyStoreAndCert(client,keystore,keystore_password);
+		}catch (Exception e) {
+			e.printStackTrace();
+			throw new ClientLoadingException();
+		}
+
 
 	}
 
-	private static void checkKeyStoreAndCert(String client,String keystore, String keystore_password) throws ClientLoadingException {
-		
-		File fks = new File("client/"+client+"/"+keystore);
-		
-		File cert = new File("./PubKeys/"+client+".cer");
-		
-		
-		if(!fks.exists() || !cert.exists()) {
+	private static PrivateKey checkKeyStoreAndCert(String client,String keystore, String keystore_password) throws ClientLoadingException {
+		File user = new File("client/"+client);
+		if(!user.exists()) {
+			System.out.println("ERROR: client/"+client+" folder not found");
 			throw new ClientLoadingException();
 		}
+
+		File cert = new File("PubKeys/"+client+".cer");
+		if(!cert.exists()) {
+			System.out.println("ERROR: "+client+".cer not found inside PubKeys folder");
+			throw new ClientLoadingException();
+		}
+		File ksf = new File("client/"+client+"/"+keystore);
+		if(!ksf.exists()) {
+			System.out.println("ERROR: Keystore not found inside client/"+client+" folder");
+			throw new ClientLoadingException();
+		}
+		
+		return SecurityChecker.getInstance().getPrivateKey(client);
+
+
 	}
 
 	private static void checkTrustStore(String truststore) throws ClientLoadingException {
@@ -90,16 +145,4 @@ public class ClientLoader {
 		}
 	}
 
-	public static PrivateKey getPrivateKey(String client,String keystore, String keystore_password) {
-		try {
-			FileInputStream kfile = new FileInputStream("client/"+client+"/"+keystore);
-			KeyStore kstore = KeyStore.getInstance("JCEKS");
-			kstore.load(kfile, keystore_password.toCharArray()); 
-			return (PrivateKey) kstore.getKey(client, keystore_password.toCharArray());
-		}catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-		
-	}
 }

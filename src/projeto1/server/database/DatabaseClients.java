@@ -1,17 +1,26 @@
 package projeto1.server.database;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
+
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 
 import projeto1.server.core.ClientInfo;
+import projeto1.server.core.SystemSeiTchizServer;
 
 public class DatabaseClients {
 
@@ -79,16 +88,21 @@ public class DatabaseClients {
 	private void load() {
 		try {
 			System.out.println("INFO: Loading clients database");
-			Scanner sc = new Scanner(new File("server/users.txt"));
+			Cipher c = Cipher.getInstance("AES");
+			c.init(Cipher.DECRYPT_MODE,new SecretKeySpec(SystemSeiTchizServer.getLoadedInstance().getPrivateKey().getEncoded(),"AES"));
+			FileInputStream fis = new FileInputStream("server/users.txt");
+			BufferedReader d = new BufferedReader(new InputStreamReader(new CipherInputStream(fis, c)));
 			clients = new HashMap<>();
-			while(sc.hasNextLine()) {
-				String line = sc.nextLine();
+			String line = d.readLine();
+			while(line != null) {
 				String[] aux = line.split(":");
 				if(aux.length != 2) continue;
 				addFromTxt(aux[0], aux[1]);
+				line = d.readLine();
 			}
-			sc.close();			
-		}catch (IOException e) {
+			d.close();			
+			fis.close();
+		}catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
 			System.out.println("Error while loading users.txt, creating new database");
 			clients = new HashMap<>();
 			return;
@@ -105,7 +119,7 @@ public class DatabaseClients {
 		
 		ClientInfo c = new ClientInfo(username,certificado);
 		if(c.getPublicKey() == null) {
-			System.out.println("NO PUBLIC KEY FOUND");
+			System.out.println("ERROR: NO PUBLIC KEY FOUND");
 			return null;
 		}
 		File folder = new File("server/"+username);
@@ -119,7 +133,7 @@ public class DatabaseClients {
 			return clients.get(username);
 		}
 		else {
-			System.out.println("CANT SAVE");
+			System.out.println("ERROR: CAN NOT SAVE CLIENTS DATABASE");
 			clients.remove(username);
 			return null;
 		}
@@ -127,18 +141,32 @@ public class DatabaseClients {
 
 	public synchronized boolean save() {
 		try {
-			FileWriter writer = new FileWriter(new File("server/users.txt"));
+			Cipher c = Cipher.getInstance("AES");
+			Cipher c2 = Cipher.getInstance("AES");
+			c.init(Cipher.ENCRYPT_MODE, SystemSeiTchizServer.getLoadedInstance().getPrivateKey());
+			c2.init(Cipher.ENCRYPT_MODE, SystemSeiTchizServer.getLoadedInstance().getPrivateKey());
+			FileOutputStream fosTXT = new FileOutputStream(new File("server/users.txt"));
+			CipherOutputStream cosTXT = new CipherOutputStream(fosTXT, c);
+			FileOutputStream fos = null;
+			CipherOutputStream cosinfo = null;
+			ObjectOutputStream oos = null;
 			for (Map.Entry<String,ClientInfo> entry : clients.entrySet()) {
 				String username = entry.getKey();
 				String cert = entry.getValue().getCertificadoPath();
-				writer.append(username+":"+cert+"\n");
-				FileOutputStream fos = new FileOutputStream(new File("server/"+username+"/"+username+".info"));
-				ObjectOutputStream oos = new ObjectOutputStream(fos);
+				String to_write = username+":"+cert;
+				cosTXT.write(to_write.getBytes());
+				fos = new FileOutputStream(new File("server/"+username+"/"+username+".info"));
+				cosinfo = new CipherOutputStream(fos, c2);
+				oos = new ObjectOutputStream(cosinfo);
 				oos.writeObject(entry.getValue());
 				oos.close();
+				cosinfo.close();
+				fos.close();
 			}
-			writer.close();
-		}catch (IOException e) {
+
+			cosTXT.close();
+			fosTXT.close();
+		}catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
 			e.printStackTrace();
 			System.out.println("Error while saving");
 			return false;

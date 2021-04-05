@@ -1,12 +1,11 @@
 package projeto1.server.core;
 
+
 import java.io.FileInputStream;
 import java.security.KeyStore;
-import java.security.PrivateKey;
 
 import javax.crypto.SecretKey;
 
-import projeto1.server.database.DatabaseKeys;
 import projeto1.server.exceptions.SystemLoadingException;
 import projeto1.server.handlers.KeysLoader;
 
@@ -14,13 +13,9 @@ public class SystemSeiTchizServer {
 
 	private static SystemSeiTchizServer singleton = null;
 	private String keystore;
-	private String keystorePassword;
-	private DatabaseKeys keys = null;
 	
 	private SystemSeiTchizServer(String keystore,String keystorePassword) {
 		this.keystore = keystore;
-		this.keystorePassword = keystorePassword;
-		keys = DatabaseKeys.getInstance(keystore, keystorePassword);
 	}
 	
 	public static SystemSeiTchizServer getLoadedInstance() {
@@ -30,7 +25,8 @@ public class SystemSeiTchizServer {
 	public static SystemSeiTchizServer load(String keystore, String keystorePassword) throws SystemLoadingException {
 		if(!KeysLoader.checkKeystoreAndCertifcate(keystore))
 			throw new SystemLoadingException();
-//		System.setProperty("javax.net.ssl.trustStore", "truststore.client");
+		System.setProperty("javax.net.ssl.keyStore", keystore);
+		System.setProperty("javax.net.ssl.keyStorePassword", keystorePassword);
 		singleton = new SystemSeiTchizServer(keystore, keystorePassword);
 		return singleton;
 	}
@@ -40,6 +36,14 @@ public class SystemSeiTchizServer {
 	}
 	
 	public SecretKey getPrivateKey() {
-		return (SecretKey) keys.getKey("secKey", "123456");
+		try {
+			FileInputStream fis = new FileInputStream("encrypt.server");
+			KeyStore ks = KeyStore.getInstance("JCEKS");
+			ks.load(fis,"123456".toCharArray());
+			return (SecretKey) ks.getKey("secKey", "123456".toCharArray());
+		}catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 }
