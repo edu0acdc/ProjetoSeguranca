@@ -1,5 +1,5 @@
 @ECHO OFF
-cd server
-java "-Djava.security.manager" "-Djava.security.policy=serverCompiler.policy" -jar .\server.jar SeiTchizServer 45678
+cd SeiTchiz/serverCode
+java "-Djava.security.manager" "-Djava.security.policy=serverCompiler.policy" -jar ..\server.jar SeiTchizServer 45678 keystore.server 123456
 cd ..
 PAUSE

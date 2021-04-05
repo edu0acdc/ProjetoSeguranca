@@ -1,0 +1,10 @@
+grant codeBase "file:client.jar" {
+	permission java.net.SocketPermission "*:45678", "connect,resolve";
+	permission java.io.FilePermission ".${/}client", "read,write";
+	permission java.io.FilePermission "client${/}-", "read,write";
+	permission java.io.FilePermission ".${/}truststore.client", "read";
+	permission java.io.FilePermission ".${/}PubKeys", "read,write";
+	permission java.io.FilePermission "PubKeys${/}-", "read,write";
+	permission java.util.PropertyPermission "javax.net.ssl.trustStore", "write";
+	permission java.lang.RuntimePermission "accessClassInPackage.sun.security.x509";
+};

@@ -7,14 +7,26 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
-
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import projeto1.sharedCore.GroupKey;
 import projeto1.sharedCore.LoginInfo;
 import projeto1.sharedCore.Message;
+import projeto1.sharedCore.MessageGroup;
+import projeto1.sharedCore.MessageGroupEncrypted;
 import projeto1.sharedCore.MessagePacket;
 import projeto1.sharedCore.PartialFile;
 
@@ -60,7 +72,7 @@ public class Client extends Thread{
 		System.out.println("INFO: Socket created with "+ip+":"+port);
 
 		System.out.println("INFO: Running Client");
-		
+
 		try {
 			ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
 			ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
@@ -76,15 +88,59 @@ public class Client extends Thread{
 					System.out.println("ERROR: NOT POSSIBLE TO EXECUTE COMMAND");
 					continue;
 				}	
-				oos.writeObject(to_send);
+			
 				if(to_send.getMsg() == Message.POST) {
+					oos.writeObject(to_send);
 					post(oos,ois,to_send);
 				}
 				else if(to_send.getMsg() == Message.WALL) {
+					oos.writeObject(to_send);
 					wall(ois,to_send);
 				}
+				else if(to_send.getMsg() == Message.TRY_ADD_USER) {
+					try {
+						addUser(ois, oos, to_send);
+					}catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else if(to_send.getMsg() == Message.NEW_GROUP) {
+					try {
+						createGroup(ois, oos, to_send);
+					}catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else if(to_send.getMsg() == Message.TRY_REMOVE_USER) {
+					try {
+						removeUser(ois, oos, to_send);
+					}catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else if(to_send.getMsg() == Message.TRY_SEND_MSG) {
+					try {
+						sendMsg(ois, oos, to_send);
+					}catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else if(to_send.getMsg() == Message.COLLECT) {
+					try {
+						collect(ois, oos, to_send);
+					}catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				else if(to_send.getMsg() == Message.HISTORY) {
+					try {
+						history(ois, oos, to_send);
+					}catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
 				else {
-
+					oos.writeObject(to_send);
 					try {
 						MessagePacket received = (MessagePacket) ois.readObject();
 						while(received == null) {
@@ -104,68 +160,54 @@ public class Client extends Thread{
 	}
 
 
-	private void wall(ObjectInputStream ois,MessagePacket to_send) {
-		try {
-			PartialFile pf = null;
-			do {
-				pf = (PartialFile) ois.readObject();
-				if(pf.getFilename().trim().length() == 0) {
-					break;
-				}
-				File f = new File("client/"+id+"/wall/"+pf.getFilename());
-				FileOutputStream fos = new FileOutputStream(f);
-
-				while(true) {
-					if(pf.getMsg() != Message.BYTES)
-						break;
-					fos.write(pf.getBytes(),0,pf.getLength());
-					pf = (PartialFile) ois.readObject();
-				}
-				
-				fos.close();
-			}while(pf.getMsg() != Message.NO_MORE_FILES);
-
-
-
-			MessagePacket received = (MessagePacket) ois.readObject();
-			while(received == null) {
-				received = (MessagePacket) ois.readObject();
+	private void wall(ObjectInputStream ois,MessagePacket to_send) throws ClassNotFoundException, IOException {
+		PartialFile pf = null;
+		do {
+			pf = (PartialFile) ois.readObject();
+			if(pf.getFilename().trim().length() == 0) {
+				break;
 			}
-			pp.processPacket(to_send.getMsg(),received);
+			File f = new File("client/"+id+"/wall/"+pf.getFilename());
+			FileOutputStream fos = new FileOutputStream(f);
 
-		}catch (IOException | ClassNotFoundException e) {
-			e.printStackTrace();
+			while(true) {
+				if(pf.getMsg() != Message.BYTES)
+					break;
+				fos.write(pf.getBytes(),0,pf.getLength());
+				pf = (PartialFile) ois.readObject();
+			}
+
+			fos.close();
+		}while(pf.getMsg() != Message.NO_MORE_FILES);
+
+		MessagePacket received = (MessagePacket) ois.readObject();
+		while(received == null) {
+			received = (MessagePacket) ois.readObject();
 		}
-
-
+		pp.processPacket(to_send.getMsg(),received);
 
 	}
 
 	private boolean post(ObjectOutputStream oos, ObjectInputStream ois,MessagePacket to_send) throws IOException, ClassNotFoundException {
 		String filename = to_send.getArgs()[0];
 		File f = new File("client/"+id+"/photos/"+filename);
-		
-		
-			FileInputStream fis = new FileInputStream(f);
-			oos.writeObject(new PartialFile(new byte[] {},0,Message.NEW_FILE,filename));
-			while(true) {
-				byte[] bytes = new byte[1024];
-				int bread = fis.read(bytes, 0, 1024);
-				if(bread <= 0) {
-					break;
-				}
-				oos.writeObject(new PartialFile(bytes, bread,Message.BYTES,filename));
+		FileInputStream fis = new FileInputStream(f);
+		oos.writeObject(new PartialFile(new byte[] {},0,Message.NEW_FILE,filename));
+		while(true) {
+			byte[] bytes = new byte[1024];
+			int bread = fis.read(bytes, 0, 1024);
+			if(bread <= 0) {
+				break;
 			}
-			oos.writeObject(new PartialFile(new byte[] {},0,Message.END_OF_FILE,filename));
-			fis.close();
-
-			MessagePacket received = (MessagePacket) ois.readObject();
-			while(received == null) {
-				received = (MessagePacket) ois.readObject();
-			}
-			pp.processPacket(to_send.getMsg(),received);
-		
-
+			oos.writeObject(new PartialFile(bytes, bread,Message.BYTES,filename));
+		}
+		oos.writeObject(new PartialFile(new byte[] {},0,Message.END_OF_FILE,filename));
+		fis.close();
+		MessagePacket received = (MessagePacket) ois.readObject();
+		while(received == null) {
+			received = (MessagePacket) ois.readObject();
+		}
+		pp.processPacket(to_send.getMsg(),received);
 		return true;
 
 
@@ -221,7 +263,7 @@ public class Client extends Thread{
 				e.printStackTrace();
 				return false;
 			}
-						
+
 			try {
 				MessagePacket response = (MessagePacket) ois.readObject();
 				System.out.println(Message.getDescription(response.getMsg()));
@@ -230,11 +272,180 @@ public class Client extends Thread{
 				e.printStackTrace();
 				return false;
 			}
-			
+
 		}
 		else {
 			return false;
 		}
 	}
+
+	private void addUser(ObjectInputStream ois,ObjectOutputStream oos,MessagePacket to_send) throws NoSuchAlgorithmException, ClassNotFoundException, IOException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException {
+		oos.writeObject(to_send);
+		MessagePacket groupinfo = (MessagePacket) ois.readObject();
+		if(groupinfo.getMsg() == Message.FAIL) {
+			System.out.println(groupinfo.getINFO());
+			return;
+		}
+		SecretKey sk = KeyGenerator.getInstance("AES").generateKey();
+		
+		String[] users = (String[]) groupinfo.getResults()[0];
+		int counter = (int) groupinfo.getResults()[1];
+		counter++;
+		GroupKey[] new_keys = new GroupKey[users.length];
+		for (int i = 0; i < users.length; i++) {
+			PublicKey pub = SecurityChecker.getInstance().getCertificate(users[i]).getPublicKey();
+			Cipher c = Cipher.getInstance("RSA");	
+			c.init(Cipher.WRAP_MODE, pub);
+			byte[] wrappedKey = c.wrap(sk);
+			new_keys[i] = new GroupKey(users[i], counter, wrappedKey);
+		}
+		
+		to_send = new MessagePacket(Message.ADD_USER, null, id, null);
+		to_send.addResults(new_keys);
+		oos.writeObject(to_send);
+		
+		MessagePacket received = (MessagePacket) ois.readObject();
+		if(received.getMsg() == Message.SUCCESS) {
+			System.out.println("User added");
+		}
+		else {
+			System.out.println("Error while adding user to group");
+			System.out.println("INFO:"+received.getINFO());
+		}
+	}
+
+	private void removeUser(ObjectInputStream ois,ObjectOutputStream oos,MessagePacket to_send) throws IOException, ClassNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException {
+		oos.writeObject(to_send);
+		MessagePacket groupinfo = (MessagePacket) ois.readObject();
+		if(groupinfo.getMsg() == Message.FAIL) {
+			System.out.println(groupinfo.getINFO());
+			return;
+		}
+		SecretKey sk = KeyGenerator.getInstance("AES").generateKey();
+		String[] users = (String[]) groupinfo.getResults()[0];
+		int counter = (int) groupinfo.getResults()[1];
+		counter++;
+		GroupKey[] new_keys = new GroupKey[users.length];
+		for (int i = 0; i < users.length; i++) {
+			PublicKey pub = SecurityChecker.getInstance().getCertificate(users[i]).getPublicKey();
+			Cipher c = Cipher.getInstance("RSA");	
+			c.init(Cipher.WRAP_MODE, pub);
+			byte[] wrappedKey = c.wrap(sk);
+			new_keys[i] = new GroupKey(users[i], counter, wrappedKey);
+		}
+		
+		to_send = new MessagePacket(Message.REMOVE_USER, null, id, null);
+		to_send.addResults(new_keys);
+		oos.writeObject(to_send);
+		
+		MessagePacket received = (MessagePacket) ois.readObject();
+		if(received.getMsg() == Message.SUCCESS) {
+			System.out.println("User removed");
+		}
+		else {
+			System.out.println("Error while removing user of group");
+			System.out.println("INFO:"+received.getINFO());
+		}
+	}
+
+	private void createGroup(ObjectInputStream ois,ObjectOutputStream oos,MessagePacket to_send) throws NoSuchAlgorithmException, InvalidKeyException, 
+	NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, IOException, ClassNotFoundException {
+		SecretKey sk = KeyGenerator.getInstance("AES").generateKey();
+		Cipher c = Cipher.getInstance("RSA");
+		PublicKey pubk = SecurityChecker.getInstance().getCertificate(this.id).getPublicKey();
+		c.init(Cipher.WRAP_MODE, pubk);
+		byte[] wrappedKey = c.wrap(sk);
+		GroupKey gk = new GroupKey(id, 0, wrappedKey);
+		to_send.addResults(gk);
+		oos.writeObject(to_send);	
+		MessagePacket received = (MessagePacket) ois.readObject();
+		if(received.getMsg() == Message.SUCCESS) {
+			System.out.println("Group created");
+		}
+		else {
+			System.out.println("Erro while creating group");
+			System.out.println("INFO:"+received.getINFO());
+		}
+	}
+
+	private void sendMsg(ObjectInputStream ois,ObjectOutputStream oos,MessagePacket to_send) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException, ClassNotFoundException, IllegalBlockSizeException, BadPaddingException {
+		String data = to_send.getArgs()[1];
+		oos.writeObject(new MessagePacket(Message.TRY_SEND_MSG, new String[] {to_send.getArgs()[0]}, id, null));
+		
+		MessagePacket mpk = (MessagePacket) ois.readObject();
+		if(mpk.getMsg() == Message.FAIL) {
+			System.out.println(mpk.getINFO());
+			return;
+		}
+		
+		GroupKey gp = (GroupKey) mpk.getResults()[0];
+		int counter = (int) mpk.getResults()[1];
+		Cipher c = Cipher.getInstance("RSA");
+		c.init(Cipher.UNWRAP_MODE, private_key);
+		Key key = c.unwrap(gp.getWrappedKey(),"AES", Cipher.SECRET_KEY);
+		
+		c = Cipher.getInstance("AES");
+		c.init(Cipher.ENCRYPT_MODE, key);
+		byte[] encMsg = c.doFinal(data.getBytes());
+		
+		MessagePacket msg = new MessagePacket(Message.MSG,null,id,null);
+		msg.addResults(new MessageGroup(id, encMsg, counter));
+		oos.writeObject(msg);
+		
+		MessagePacket received = (MessagePacket) ois.readObject();
+		if(received.getMsg() == Message.SUCCESS) {
+			System.out.println(received.getINFO());
+		}
+		else {
+			System.out.println("Erro while creating group");
+			System.out.println("INFO:"+received.getINFO());
+		}
+		
+	}
+
+	private void collect(ObjectInputStream ois,ObjectOutputStream oos,MessagePacket to_send) throws ClassNotFoundException, IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+		oos.writeObject(to_send);
+		MessagePacket collect = (MessagePacket) ois.readObject();
+		
+		if(collect.getMsg() == Message.FAIL) {
+			System.out.println(collect.getINFO());
+			return;
+		}		
+		MessageGroupEncrypted[] mges = (MessageGroupEncrypted[]) collect.getResults()[0];
+		for (int i = 0; i < mges.length; i++) {
+			MessageGroupEncrypted mge = mges[i];
+			Cipher c = Cipher.getInstance("RSA");
+			GroupKey gp = mge.getGroupKey();
+			c.init(Cipher.UNWRAP_MODE, private_key);
+			Key key = c.unwrap(gp.getWrappedKey(),"AES", Cipher.SECRET_KEY);
+			c = Cipher.getInstance("AES");
+			c.init(Cipher.DECRYPT_MODE, key);
+			String data = new String(c.doFinal(mge.getMg().getEncodedMsg()));
+			System.out.println(mge.getMg().getSender()+"->"+data);
+		}
+	}
+
+	private void history(ObjectInputStream ois,ObjectOutputStream oos,MessagePacket to_send) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, ClassNotFoundException {
+		oos.writeObject(to_send);
+		MessagePacket history = (MessagePacket) ois.readObject();
+		
+		if(history.getMsg() == Message.FAIL) {
+			System.out.println(history.getINFO());
+			return;
+		}		
+		MessageGroupEncrypted[] mges = (MessageGroupEncrypted[]) history.getResults()[0];
+		for (int i = 0; i < mges.length; i++) {
+			MessageGroupEncrypted mge = mges[i];
+			Cipher c = Cipher.getInstance("RSA");
+			GroupKey gp = mge.getGroupKey();
+			c.init(Cipher.UNWRAP_MODE, private_key);
+			Key key = c.unwrap(gp.getWrappedKey(),"AES", Cipher.SECRET_KEY);
+			c = Cipher.getInstance("AES");
+			c.init(Cipher.DECRYPT_MODE, key);
+			String data = new String(c.doFinal(mge.getMg().getEncodedMsg()));
+			System.out.println(mge.getMg().getSender()+"->"+data);
+		}
+	}
+
 
 }

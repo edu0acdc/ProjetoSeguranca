@@ -1,5 +1,0 @@
-grant codeBase "file:client.jar" {
-	permission java.net.SocketPermission "*:45678", "connect,resolve";
-	permission java.io.FilePermission ".${/}client", "read,write";
-	permission java.io.FilePermission "client${/}-", "read,write";
-};

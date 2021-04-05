@@ -1,7 +1,0 @@
-grant codeBase "file:server.jar" {
-	permission java.net.SocketPermission "localhost:45678", "connect,listen";
-	permission java.net.SocketPermission "*:1-", "accept,resolve";
-	permission java.io.FilePermission ".${/}server", "read,write";
-	permission java.io.FilePermission "server${/}-", "read,write";
-	permission java.util.PropertyPermission "user.dir", "read";
-};

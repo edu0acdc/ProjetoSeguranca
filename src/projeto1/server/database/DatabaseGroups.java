@@ -20,7 +20,9 @@ import javax.crypto.spec.SecretKeySpec;
 
 import projeto1.server.core.Group;
 import projeto1.server.core.SystemSeiTchizServer;
+import projeto1.sharedCore.GroupKey;
 import projeto1.sharedCore.MessageGroup;
+import projeto1.sharedCore.MessageGroupEncrypted;
 
 public class DatabaseGroups {
 
@@ -69,9 +71,11 @@ public class DatabaseGroups {
 	public boolean addMember(String username,String groupID) {
 		if(!groups.containsKey(groupID))
 			return false;
+		groups.get(groupID).addMember(username);
 		save();
-		return groups.get(groupID).addMember(username);
+		return true;
 	}
+	
 	
 	public boolean removeMember(String username,String groupID) {
 		if(!groups.containsKey(groupID))
@@ -91,10 +95,10 @@ public class DatabaseGroups {
 		return groups.get(groupID).getOwner().contentEquals(username);
 	}
 
-	public synchronized boolean createGroup(String groupID, String owner) {
+	public synchronized boolean createGroup(String groupID, String owner, GroupKey gk) {
 		if(groups.containsKey(groupID))
 			return false;
-		groups.put(groupID,new Group(groupID, owner));
+		groups.put(groupID,new Group(groupID, owner,gk));
 		save();
 		return true;
 	}
@@ -104,7 +108,7 @@ public class DatabaseGroups {
 	}
 
 	public String[] getGroupsOfOwner(String owner) {
-		List<String> aux = new ArrayList<String>();
+		List<String> aux = new ArrayList<>();
 		for (Group g : groups.values()) {
 			if(g.getOwner().contentEquals(owner)) {
 				aux.add(g.toString()+"\n");
@@ -115,7 +119,7 @@ public class DatabaseGroups {
 	}
 
 	public String[] getGroupsOfUser(String member) {
-		List<String> aux = new ArrayList<String>();
+		List<String> aux = new ArrayList<>();
 		for (Group g : groups.values()) {
 			if(g.isMember(member)) {
 				aux.add(g.toString()+"\n");
@@ -129,16 +133,16 @@ public class DatabaseGroups {
 		return groups.get(groupID).toString();
 	}
 
-	public void sendMessage(String sender, String msg,String groupID) {
-		groups.get(groupID).addMessage(sender, msg);
+	public void sendMessage(String groupID,MessageGroup mg) {
+		groups.get(groupID).addMessage(mg);
 		save();
 	}
 
-	public MessageGroup[] collect(String sender, String groupID) {
+	public MessageGroupEncrypted[] collect(String sender, String groupID) {
 		return groups.get(groupID).collect(sender);
 	}
 
-	public MessageGroup[] history(String sender,String groupID) {
+	public MessageGroupEncrypted[] history(String sender,String groupID) {
 		return groups.get(groupID).getHistory(sender);
 	}
 	
@@ -156,6 +160,32 @@ public class DatabaseGroups {
 		}catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException e) {
 			System.out.println("ERROR: NOT POSSIBLE TO SAVE GROUPS DATABASE");
 		}
+	}
+
+	public int getCounterOfGroup(String groupID) {
+		if(!groups.containsKey(groupID))
+			return -1;
+		return groups.get(groupID).getCounter();
+	}
+
+	public boolean setNewKeys(String groupID, GroupKey[] keys) {
+		if(!groups.containsKey(groupID))
+			return false;
+		groups.get(groupID).setNewKeys(keys);
+		save();
+		return true;
+	}
+
+	public boolean canRemoveMember(String username, String groupID) {
+		if(!groups.containsKey(groupID))
+			return false;
+		return groups.get(groupID).canRemoveMember(username);
+	}
+
+	public GroupKey getLastKey(String username, String groupID) {
+		if(!groups.containsKey(groupID))
+			return null;
+		return groups.get(groupID).getLastKey(username);
 	}
 	
 	

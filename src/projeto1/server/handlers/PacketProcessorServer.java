@@ -23,19 +23,19 @@ public class PacketProcessorServer {
 		switch (packet.getMsg()) {
 		//GROUP
 		case Message.HISTORY:
-			return processHistory(packet);
+			return processHistory(packet,ois,oos);
 		case Message.COLLECT:
-			return processCollect(packet);
-		case Message.MSG:
-			return processMessage(packet);
+			return processCollect(packet,ois,oos);
+		case Message.TRY_SEND_MSG:
+			return processMessage(packet,ois,oos);
 		case Message.GROUP_INFO:
 			return processGroupInfo(packet);
-		case Message.REMOVE_USER:
-			return processRemoveUser(packet);
-		case Message.ADD_USER:
-			return processAddUser(packet);
+		case Message.TRY_REMOVE_USER:
+			return processRemoveUser(packet,ois,oos);
+		case Message.TRY_ADD_USER:
+			return processAddUser(packet,ois,oos);
 		case Message.NEW_GROUP:
-			return processNewGroup(packet);
+			return processNewGroup(packet,ois,oos);
 			//
 
 		case Message.LIKE:
@@ -53,7 +53,9 @@ public class PacketProcessorServer {
 		default:
 			break;
 		}
-		return null;
+		MessagePacket error = new MessagePacket(Message.FAIL,null,"server",null);
+		error.setINFO("ERROR: Can not perfom that action");
+		return error;
 	}
 	
 	//FOLLOW
@@ -90,17 +92,17 @@ public class PacketProcessorServer {
 	}
 
 	//GROUP
-	private MessagePacket processNewGroup(MessagePacket packet) {
-		return groupHandler.createGroup(packet);
+	private MessagePacket processNewGroup(MessagePacket packet, ObjectInputStream ois, ObjectOutputStream oos) {
+		return groupHandler.createGroup(packet,ois,oos);
 	}
 
-	private MessagePacket processAddUser(MessagePacket packet) {
-		return groupHandler.addMember(packet);
+	private MessagePacket processAddUser(MessagePacket packet, ObjectInputStream ois, ObjectOutputStream oos) {
+		return groupHandler.addMember(packet,ois,oos);
 
 	}
 
-	private MessagePacket processRemoveUser(MessagePacket packet) {
-		return groupHandler.removeMember(packet);
+	private MessagePacket processRemoveUser(MessagePacket packet, ObjectInputStream ois, ObjectOutputStream oos) {
+		return groupHandler.removeMember(packet,ois,oos);
 
 	}
 
@@ -109,16 +111,16 @@ public class PacketProcessorServer {
 
 	}
 
-	private MessagePacket processMessage(MessagePacket packet) {
-		return groupHandler.sendMessage(packet);
+	private MessagePacket processMessage(MessagePacket packet, ObjectInputStream ois, ObjectOutputStream oos) {
+		return groupHandler.sendMessage(packet,ois,oos);
 	}
 
-	private MessagePacket processCollect(MessagePacket packet) {
-		return groupHandler.collect(packet);
+	private MessagePacket processCollect(MessagePacket packet, ObjectInputStream ois, ObjectOutputStream oos) {
+		return groupHandler.collect(packet,ois,oos);
 	}
 
-	private MessagePacket processHistory(MessagePacket packet) {
-		return groupHandler.history(packet);
+	private MessagePacket processHistory(MessagePacket packet, ObjectInputStream ois, ObjectOutputStream oos) {
+		return groupHandler.history(packet,ois,oos,ois,oos);
 
 	}
 

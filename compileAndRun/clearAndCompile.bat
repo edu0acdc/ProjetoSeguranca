@@ -1,22 +1,26 @@
 @ECHO OFF
-cd server
+cd SeiTchiz/serverCode
 del /s /q projeto1
 rmdir projeto1 /s /q
+cd ..
 del server.jar
 cd ..
-cd client
+cd SeiTchiz/clientCode
 del /s /q projeto1
 rmdir projeto1 /s /q
+cd ..
 del client.jar
 cd ..
-cd server
+cd SeiTchiz/serverCode
+cd ..
 del /s /q server
 rmdir server /s /q
 cd ..
-cd client
+cd SeiTchiz/clientCode
+cd ..
 del /s /q client
 rmdir client /s /q
 cd ..
-
+PAUSE
 ./compileALL.bat
 PAUSE

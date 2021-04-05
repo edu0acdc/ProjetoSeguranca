@@ -37,7 +37,9 @@ public class Message {
 	public static final int MSG = 110;
 	public static final int COLLECT = 111;
 	public static final int HISTORY = 112;
-	
+	public static final int TRY_ADD_USER = 113;
+	public static final int TRY_REMOVE_USER = 114;
+	public static final int TRY_SEND_MSG = 115;	
 	
 	//
 	public static final int NEW_FILE = -1;

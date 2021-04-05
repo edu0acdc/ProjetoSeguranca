@@ -60,7 +60,7 @@ public class DatabaseClients {
 	private void addFromTxt(String username,String certificado) {
 		File dir = new File("server/"+username);
 		ClientInfo c = null;
-		if(!dir.exists() || !dir.isDirectory()) {
+		if(!dir.exists()) {
 			System.out.println("ERROR ("+username+"): PERSONAL FOLDER MISSING ");
 			if(dir.mkdir()) {
 				System.out.println("INFO ("+username+"): PERSONAL FOLDER RECREATED");
@@ -78,6 +78,7 @@ public class DatabaseClients {
 				throw new IOException();
 			}
 		}catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
 			clients.put(username,new ClientInfo(username,certificado));
 			return;
 		}
@@ -142,25 +143,20 @@ public class DatabaseClients {
 	public synchronized boolean save() {
 		try {
 			Cipher c = Cipher.getInstance("AES");
-			Cipher c2 = Cipher.getInstance("AES");
 			c.init(Cipher.ENCRYPT_MODE, SystemSeiTchizServer.getLoadedInstance().getPrivateKey());
-			c2.init(Cipher.ENCRYPT_MODE, SystemSeiTchizServer.getLoadedInstance().getPrivateKey());
 			FileOutputStream fosTXT = new FileOutputStream(new File("server/users.txt"));
 			CipherOutputStream cosTXT = new CipherOutputStream(fosTXT, c);
 			FileOutputStream fos = null;
-			CipherOutputStream cosinfo = null;
 			ObjectOutputStream oos = null;
 			for (Map.Entry<String,ClientInfo> entry : clients.entrySet()) {
 				String username = entry.getKey();
 				String cert = entry.getValue().getCertificadoPath();
-				String to_write = username+":"+cert;
+				String to_write = username+":"+cert+"\n";
 				cosTXT.write(to_write.getBytes());
 				fos = new FileOutputStream(new File("server/"+username+"/"+username+".info"));
-				cosinfo = new CipherOutputStream(fos, c2);
-				oos = new ObjectOutputStream(cosinfo);
+				oos = new ObjectOutputStream(fos);
 				oos.writeObject(entry.getValue());
 				oos.close();
-				cosinfo.close();
 				fos.close();
 			}
 

@@ -1,0 +1,15 @@
+grant codeBase "file:server.jar" {
+	permission java.net.SocketPermission "localhost:45678", "connect,listen";
+	permission java.net.SocketPermission "*:1-", "accept,resolve";
+	permission java.io.FilePermission ".${/}server", "read,write";
+	permission java.io.FilePermission "server${/}-", "read,write";
+	permission java.util.PropertyPermission "user.dir", "read";
+	permission java.io.FilePermission ".${/}PubKeys", "read,write";
+	permission java.io.FilePermission "PubKeys${/}-", "read,write";
+	permission java.io.FilePermission "keystore.server", "read,write";
+	permission java.io.FilePermission "serverCA.cer", "read,write";
+	permission java.io.FilePermission "encrypt.server", "read";
+	permission java.util.PropertyPermission "javax.net.ssl.trustStore", "write";
+	permission java.util.PropertyPermission "javax.net.ssl.keyStore", "write";
+	permission java.util.PropertyPermission "javax.net.ssl.keyStorePassword", "write";
+};

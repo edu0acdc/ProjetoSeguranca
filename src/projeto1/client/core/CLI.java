@@ -111,7 +111,7 @@ public class CLI {
 		for (int i = 2; i < aux.length; i++) {
 			bob.append(aux[i]+ " ");
 		}
-		return new MessagePacket(Message.MSG, new String[]{aux[1],bob.toString()},username,new String[] {});
+		return new MessagePacket(Message.TRY_SEND_MSG, new String[]{aux[1],bob.toString()},username,new String[] {});
 	}
 
 
@@ -132,7 +132,7 @@ public class CLI {
 		if(aux.length != 3) {
 			return null;
 		}
-		return new MessagePacket(Message.REMOVE_USER, new String[]{aux[1],aux[2]},username,new String[] {});
+		return new MessagePacket(Message.TRY_REMOVE_USER, new String[]{aux[1],aux[2]},username,new String[] {});
 	}
 
 
@@ -141,7 +141,7 @@ public class CLI {
 		if(aux.length != 3) {
 			return null;
 		}
-		return new MessagePacket(Message.ADD_USER, new String[]{aux[1],aux[2]},username,new String[] {});
+		return new MessagePacket(Message.TRY_ADD_USER, new String[]{aux[1],aux[2]},username,new String[] {});
 	}
 
 
